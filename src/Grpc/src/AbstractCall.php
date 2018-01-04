@@ -61,8 +61,9 @@ abstract class AbstractCall
         curl_setopt($this->ch, CURLOPT_URL, $method);
         curl_setopt($this->ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
+        // TODO: add curl_setopt($this->ch, $channel->getCurlOpt();
 
-        $this->channel = $channel;
+        $this->channel = $channel->getMh();
         $this->deserialize = $deserialize;
         $this->metadata = null;
         $this->trailing_metadata = null;

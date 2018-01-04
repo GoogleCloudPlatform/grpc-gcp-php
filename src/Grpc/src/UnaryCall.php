@@ -21,21 +21,12 @@ namespace Grpc;
 
 /**
  * Represents an active call that sends a single message and then gets a
- * stream of responses.
+ * single response.
  */
-class ServerStreamingCall extends AbstractCall
+class UnaryCall extends AbstractCall
 {
     protected $received_data;
     protected $receive_new_data = false;
-    protected $stream_end = false;
-
-    public function __construct($channel,
-                                $method,
-                                $deserialize,
-                                array $options = []){
-        $this->received_data = new \ArrayIterator();
-        parent::__construct($channel, $method, $deserialize, $options);
-    }
     /**
      * Start the call.
      *
@@ -53,6 +44,8 @@ class ServerStreamingCall extends AbstractCall
     protected $frame_data = "";
     public function start($data, array $metadata = [], array $options = [])
     {
+        $input_data = $this->_base64encode($data);
+        curl_setopt($this->ch, CURLOPT_POSTFIELDS, $input_data);
         $input_data = $this->_base64encode($data);
         curl_setopt($this->ch, CURLOPT_POSTFIELDS, $input_data);
         curl_setopt($this->ch, CURLOPT_WRITEFUNCTION, function(&$ch, $data) {
@@ -91,14 +84,13 @@ class ServerStreamingCall extends AbstractCall
                             $this->status = "init";
                             $this->frame_pos = 0;
                             if($this->frame_type == "DATA"){
-                                $this->received_data->append($this->_deserializeResponse($this->frame_data));
+                                $this->received_data = $this->_deserializeResponse($this->frame_data);
                                 $this->receive_new_data = true;
                                 $this->frame_data = "";
                             } else{
-                                echo "trailing: \n".$this->frame_data."\n";
+                                echo "trailing: ".$this->frame_data."\n";
                                 $this->frame_data = "";
                                 $this->stream_end = true;
-                                // TODO: split by \r\n then by ":" and save into a global map
                             }
                         }
                         break;
@@ -112,53 +104,41 @@ class ServerStreamingCall extends AbstractCall
             return strlen($data); // returning non-positive number aborts further transfer
         });
 
-        curl_multi_add_handle($this->channel, $this->ch);
-        curl_multi_setopt($this->channel, CURLMOPT_PIPELINING, 1);
-        curl_multi_setopt($this->channel, CURLMOPT_MAXCONNECTS, 1);
+        curl_multi_add_handle($this->channel->getMh(), $this->ch);
+        curl_multi_setopt($this->channel->getMh(), CURLMOPT_PIPELINING, 1);
+        curl_multi_setopt($this->channel->getMh(), CURLMOPT_MAXCONNECTS, 1);
 
-        curl_multi_add_handle($this->channel, $this->ch);
+        curl_multi_add_handle($this->channel->getMh(), $this->ch);
         $active = null;
-        curl_multi_exec($this->channel, $active);
+        curl_multi_exec($this->channel->getMh(), $active);
     }
 
     /**
-     * @return mixed An iterator of response values
-     */
-    public function responses()
-    {
-        $active = null;
-        while (!$this->stream_end || $this->received_data->valid()) {
-            if($this->received_data->valid()){
-                yield $this->received_data->current();
-                $this->received_data->next();
-            }
-            do {
-                curl_multi_exec($this->channel, $active);
-                curl_multi_select($this->channel);
-                if($this->receive_new_data) {
-                    $this->receive_new_data = false;
-                    break;
-                }
-            } while ($active > 0 && !$this->receive_new_data);
-        }
-        curl_multi_remove_handle($this->channel, $this->ch);
-        curl_close($this->ch);
-    }
-
-    /**
-     * Wait for the server to send the status, and return it.
+     * Wait for the server to respond with data and a status.
      *
-     * @return \stdClass The status object, with integer $code, string
-     *                   $details, and array $metadata members
+     * @return array [response data, status]
      */
-    public function getStatus()
+    public function wait()
     {
+        if($this->receive_new_data) {
+            return [$this->received_data, 200];
+        }
+        $active = null;
+        do {
+            curl_multi_exec($this->channel->getMh(), $active);
+            if($this->receive_new_data) {
+                // TODO: close until ($this->stream_end=true)
+                curl_multi_remove_handle($this->channel->getMh(), $this->ch);
+                curl_close($this->ch);
+                return [$this->received_data, 200];
+            }
+            curl_multi_select($this->channel->getMh());
+        } while ($active > 0);
     }
 
     /**
-     * @return mixed The metadata sent by the server
+     * TODO: support grpc APIs:
+     * public function getStatus() {}
+     * public function getMetadata() {}
      */
-    public function getMetadata()
-    {
-    }
 }

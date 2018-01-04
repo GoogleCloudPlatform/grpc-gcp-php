@@ -73,10 +73,7 @@ class BaseStub
             }
             $this->channel = $channel;
         } else {
-            $this->channel = curl_multi_init();
-            // TODO: max_con can be set by $opt?
-            curl_multi_setopt($this->channel, CURLMOPT_PIPELINING, 2);
-            curl_multi_setopt($this->channel, CURLMOPT_MAXCONNECTS, 2);
+            $this->channel = new Channel($hostname, $opts);
         }
     }
 
