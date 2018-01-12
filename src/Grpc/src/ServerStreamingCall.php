@@ -25,9 +25,19 @@ namespace Grpc;
  */
 class ServerStreamingCall extends AbstractCall
 {
+    // $received_data is an iterator saving response from WRITE callback funtion.
     protected $received_data;
-    protected $receive_new_data = false;
-    protected $stream_end = false;
+    // $has_new_received_data let iterator return the new data immediately
+    // without block until all response received
+    protected $has_new_received_data = false;
+    protected $status = "init";
+    protected $frame_len = 0;
+    protected $frame_len_read_pos = 0;
+    protected $frame_pos = 0;
+    protected $frame_data = "";
+
+    protected $request_data = "";
+    protected $request_data_pos = 0;
 
     public function __construct($channel,
                                 $method,
@@ -45,61 +55,54 @@ class ServerStreamingCall extends AbstractCall
      * @param array $options  An array of options, possible keys:
      *                        'flags' => a number (optional)
      */
-    protected $status = "init";
-    protected $frame_len = 0;
-    protected $frame_len_pos = 0;
-    protected $frame_type = "DATA";
-    protected $frame_pos = 0;
-    protected $frame_data = "";
     public function start($data, array $metadata = [], array $options = [])
     {
-        $input_data = $this->_base64encode($data);
-        curl_setopt($this->ch, CURLOPT_POSTFIELDS, $input_data);
-        curl_setopt($this->ch, CURLOPT_WRITEFUNCTION, function(&$ch, $data) {
-            // echo "\n\nchunk received:\n", $data."\n"; // process your chunk here
-            $respose_data = base64_decode($data);
-            $data_len = strlen($respose_data);
+        $this->request_data = $this->_encode($data);
+        curl_setopt($this->curl_handler, CURLOPT_READFUNCTION, function ($ch, $fh, $length = false)
+        {
+            $start_pos = $this->request_data_pos;
+            $this->request_data_pos += 1024;
+            if($this->request_data_pos > strlen($this->request_data)){
+                // send last request part;
+                $this->call_status = "send_request_done";
+            }
+            $request_len = min(strlen($this->request_data)-$start_pos, 1024);
+            return substr($this->request_data, $start_pos, $request_len);
+        });
+
+        curl_setopt($this->curl_handler, CURLOPT_WRITEFUNCTION, function(&$ch, $data) {
+            // echo "[ServerStreamingCall.php] chunk received: ".$data."\n";
+            $this->call_status = "receive_response_begin";
+            $data_len = strlen($data);
             $pos = 0;
             while($pos < $data_len) {
                 switch ($this->status){
                     case "init":
-                        if(ord($respose_data[$pos]) == 0x80){
-                            $this->frame_type = "TRAILER";
-                        }
-                        if (ord($respose_data[0]) == 0x00) {
-                            $this->frame_type = "DATA";
-                        }
+                        // TODO: add compression bit check
                         $this->status = "length";
                         break;
                     case "length":
-                        if($this->frame_len_pos == 4){
+                        if($this->frame_len_read_pos == 4){
                             $this->frame_len = 0;
-                            $this->frame_len_pos = 0;
+                            $this->frame_len_read_pos = 0;
                         }
-                        $this->frame_len = ($this->frame_len << 8) + ord($respose_data[$pos]);
-                        $this->frame_len_pos++;
-                        if($this->frame_len_pos == 4){
+                        $this->frame_len = ($this->frame_len << 8) + ord($data[$pos]);
+                        $this->frame_len_read_pos++;
+                        if($this->frame_len_read_pos == 4){
                             $this->status = "message";
                         }
                         break;
                     case "message":
                         if($this->frame_pos < $this->frame_len) {
-                            $this->frame_data = $this->frame_data.$respose_data[$pos];
+                            $this->frame_data = $this->frame_data.$data[$pos];
                         }
                         $this->frame_pos++;
                         if($this->frame_pos == $this->frame_len){
                             $this->status = "init";
                             $this->frame_pos = 0;
-                            if($this->frame_type == "DATA"){
-                                $this->received_data->append($this->_deserializeResponse($this->frame_data));
-                                $this->receive_new_data = true;
-                                $this->frame_data = "";
-                            } else{
-                                echo "trailing: \n".$this->frame_data."\n";
-                                $this->frame_data = "";
-                                $this->stream_end = true;
-                                // TODO: split by \r\n then by ":" and save into a global map
-                            }
+                            $this->received_data->append($this->_deserializeResponse($this->frame_data));
+                            $this->has_new_received_data = true;
+                            $this->frame_data = "";
                         }
                         break;
                     case "invalid":
@@ -112,13 +115,15 @@ class ServerStreamingCall extends AbstractCall
             return strlen($data); // returning non-positive number aborts further transfer
         });
 
-        curl_multi_add_handle($this->channel->getMh(), $this->ch);
-        curl_multi_setopt($this->channel->getMh(), CURLMOPT_PIPELINING, 1);
-        curl_multi_setopt($this->channel->getMh(), CURLMOPT_MAXCONNECTS, 1);
+        curl_multi_add_handle($this->multi_handler, $this->curl_handler);
+        curl_multi_setopt($this->multi_handler, CURLMOPT_PIPELINING, 1);
+        curl_multi_setopt($this->multi_handler, CURLMOPT_MAXCONNECTS, 1);
 
-        curl_multi_add_handle($this->channel->getMh(), $this->ch);
+        curl_multi_add_handle($this->multi_handler, $this->curl_handler);
         $active = null;
-        curl_multi_exec($this->channel->getMh(), $active);
+        while($this->call_status != "send_request_done"){
+            curl_multi_exec($this->multi_handler, $active);
+        }
     }
 
     /**
@@ -127,22 +132,31 @@ class ServerStreamingCall extends AbstractCall
     public function responses()
     {
         $active = null;
-        while (!$this->stream_end || $this->received_data->valid()) {
+        while (!$this->channel->is_ch_finished($this->curl_handler) || $this->received_data->valid()) {
+            // echo $active." ";
             if($this->received_data->valid()){
                 yield $this->received_data->current();
                 $this->received_data->next();
             }
-            do {
-                curl_multi_exec($this->channel->getMh(), $active);
-                curl_multi_select($this->channel->getMh());
-                if($this->receive_new_data) {
-                    $this->receive_new_data = false;
-                    break;
-                }
-            } while ($active > 0 && !$this->receive_new_data);
+            if(!$this->channel->is_ch_finished($this->curl_handler)) {
+                do {
+                    curl_multi_exec($this->multi_handler, $active);
+                    curl_multi_select($this->multi_handler);
+                    $info = curl_multi_info_read($this->multi_handler);
+                    if (false !== $info) {
+                        $done_ch = $info['handle'];
+                        $this->channel->unregister_ch($done_ch);
+                    }
+                    if ($this->has_new_received_data) {
+                        $this->receive_new_data = false;
+                        break;
+                    }
+                } while ($active > 0 && !$this->has_new_received_data);
+            }
         }
-        curl_multi_remove_handle($this->channel->getMh(), $this->ch);
-        curl_close($this->ch);
+
+        curl_multi_remove_handle($this->multi_handler, $this->curl_handler);
+        curl_close($this->curl_handler);
     }
 
     /**

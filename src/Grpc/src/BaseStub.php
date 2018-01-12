@@ -28,7 +28,6 @@ class BaseStub
     private $hostname;
     private $hostname_override;
     private $channel;
-    private $http_version = '2';
 
     // a callback function
     private $update_metadata;
@@ -45,6 +44,9 @@ class BaseStub
     {
         // TODO: add credential
         // TODO: check libcurl version to choose HTTP version (upgrade during call->exec)
+        // libcurl_version >= 7.43.0 to support multiplexing
+        // libcurl_version >= 7.47.0 to support trailer
+        // libcurl_version >= 7.49.0 to support http2_prior_knowledge
 
         $this->hostname = $hostname;
         $this->update_metadata = null;
@@ -54,8 +56,8 @@ class BaseStub
             }
             unset($opts['update_metadata']);
         }
-        $package_config = json_decode(
-            file_get_contents(dirname(__FILE__).'/../../composer.json'), true);
+      //  $package_config = json_decode(
+      //      file_get_contents(dirname(__FILE__).'/../../composer.json'), true);
         if (!empty($opts['grpc.primary_user_agent'])) {
             $opts['grpc.primary_user_agent'] .= ' ';
         } else {
@@ -64,8 +66,8 @@ class BaseStub
         if (!empty($opts['grpc.ssl_target_name_override'])) {
             $this->hostname_override = $opts['grpc.ssl_target_name_override'];
         }
-        $opts['grpc.primary_user_agent'] .=
-            'grpc-php/'.$package_config['version'];
+        //$opts['grpc.primary_user_agent'] .=
+        //    'grpc-php/'.$package_config['version'];
         if ($channel) {
             if (!is_a($channel, 'resource')) {
                 throw new \Exception('The channel argument is not a'.
@@ -73,7 +75,7 @@ class BaseStub
             }
             $this->channel = $channel;
         } else {
-            $this->channel = new Channel($hostname, $opts);
+            $this->channel = new \Grpc\Channel($hostname, $opts);
         }
     }
 
@@ -94,25 +96,13 @@ class BaseStub
      */
     private function _get_jwt_aud_uri($method)
     {
-//        $last_slash_idx = strrpos($method, '/');
-//        if ($last_slash_idx === false) {
-//            throw new \InvalidArgumentException(
-//                'service name must have a slash');
-//        }
-//        $service_name = substr($method, 0, $last_slash_idx);
-//
         if ($this->hostname_override) {
             $hostname = $this->hostname_override;
         } else {
             $hostname = $this->hostname;
         }
-//        $prefix = 'https://';
-//        if($this->http_version == '1'){
-//            $prefix = 'http://';
-//        }
-//        return $prefix.$hostname.$service_name;
-        // TODO: why $prefix and services name are not needed.
-        return $hostname.$method;
+        $prefix = 'http://';
+        return $prefix.$hostname.$method;
     }
 
     /**
@@ -190,13 +180,11 @@ class BaseStub
                                             array $metadata = [],
                                             array $options = [])
     {
-        //$jwt_aud_uri = $this->_get_jwt_aud_uri($method);
         $call = new ServerStreamingCall($this->channel,
             $this->_get_jwt_aud_uri($method),
             $deserialize,
             $options);
         $call->start($argument, $metadata, $options);
-        //echo "started. $jwt_aud_uri\n";
         return $call;
     }
 

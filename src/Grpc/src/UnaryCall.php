@@ -25,8 +25,20 @@ namespace Grpc;
  */
 class UnaryCall extends AbstractCall
 {
+    // $received_data is an iterator saving response from WRITE callback funtion.
     protected $received_data;
-    protected $receive_new_data = false;
+    // $has_new_received_data let iterator return the new data immediately
+    // without block until all response received
+    protected $has_new_received_data;
+
+    protected $status = "init";
+    protected $frame_len = 0;
+    protected $frame_len_read_pos = 0;
+    protected $frame_pos = 0;
+    protected $frame_data = "";
+
+    protected $request_data = "";
+    protected $request_data_pos = 0;
     /**
      * Start the call.
      *
@@ -36,62 +48,55 @@ class UnaryCall extends AbstractCall
      * @param array $options  An array of options, possible keys:
      *                        'flags' => a number (optional)
      */
-    protected $status = "init";
-    protected $frame_len = 0;
-    protected $frame_len_pos = 0;
-    protected $frame_type = "DATA";
-    protected $frame_pos = 0;
-    protected $frame_data = "";
+
     public function start($data, array $metadata = [], array $options = [])
     {
-        $input_data = $this->_base64encode($data);
-        curl_setopt($this->ch, CURLOPT_POSTFIELDS, $input_data);
-        $input_data = $this->_base64encode($data);
-        curl_setopt($this->ch, CURLOPT_POSTFIELDS, $input_data);
-        curl_setopt($this->ch, CURLOPT_WRITEFUNCTION, function(&$ch, $data) {
-            // echo "\n\nchunk received:\n", $data."\n"; // process your chunk here
-            $respose_data = base64_decode($data);
-            $data_len = strlen($respose_data);
+        $this->request_data = $this->_encode($data);
+        curl_setopt($this->curl_handler, CURLOPT_READFUNCTION, function ($ch, $fh, $length = false)
+        {
+            $start_pos = $this->request_data_pos;
+            $this->request_data_pos += 1024;
+            if($this->request_data_pos > strlen($this->request_data)){
+                // send last request part;
+                $this->call_status = "send_request_done";
+            }
+            $request_len = min(strlen($this->request_data)-$start_pos, 1024);
+            return substr($this->request_data, $start_pos, $request_len);
+        });
+
+        curl_setopt($this->curl_handler, CURLOPT_WRITEFUNCTION, function(&$ch, $data) {
+            // echo "[UnaryCall.php] chunk received: ".$data."\n";
+            $this->call_status = "receive_response_begin";
+            $data_len = strlen($data);
             $pos = 0;
             while($pos < $data_len) {
                 switch ($this->status){
                     case "init":
-                        if(ord($respose_data[$pos]) == 0x80){
-                            $this->frame_type = "TRAILER";
-                        }
-                        if (ord($respose_data[0]) == 0x00) {
-                            $this->frame_type = "DATA";
-                        }
+                        // TODO: add compression bit check
                         $this->status = "length";
                         break;
                     case "length":
-                        if($this->frame_len_pos == 4){
+                        if($this->frame_len_read_pos == 4){
                             $this->frame_len = 0;
-                            $this->frame_len_pos = 0;
+                            $this->frame_len_read_pos = 0;
                         }
-                        $this->frame_len = ($this->frame_len << 8) + ord($respose_data[$pos]);
-                        $this->frame_len_pos++;
-                        if($this->frame_len_pos == 4){
+                        $this->frame_len = ($this->frame_len << 8) + ord($data[$pos]);
+                        $this->frame_len_read_pos++;
+                        if($this->frame_len_read_pos == 4){
                             $this->status = "message";
                         }
                         break;
                     case "message":
                         if($this->frame_pos < $this->frame_len) {
-                            $this->frame_data = $this->frame_data.$respose_data[$pos];
+                            $this->frame_data = $this->frame_data.$data[$pos];
                         }
                         $this->frame_pos++;
                         if($this->frame_pos == $this->frame_len){
                             $this->status = "init";
                             $this->frame_pos = 0;
-                            if($this->frame_type == "DATA"){
-                                $this->received_data = $this->_deserializeResponse($this->frame_data);
-                                $this->receive_new_data = true;
-                                $this->frame_data = "";
-                            } else{
-                                echo "trailing: ".$this->frame_data."\n";
-                                $this->frame_data = "";
-                                $this->stream_end = true;
-                            }
+                            $this->received_data = $this->_deserializeResponse($this->frame_data);
+                            $this->has_new_received_data = true;
+                            $this->frame_data = "";
                         }
                         break;
                     case "invalid":
@@ -104,13 +109,15 @@ class UnaryCall extends AbstractCall
             return strlen($data); // returning non-positive number aborts further transfer
         });
 
-        curl_multi_add_handle($this->channel->getMh(), $this->ch);
-        curl_multi_setopt($this->channel->getMh(), CURLMOPT_PIPELINING, 1);
-        curl_multi_setopt($this->channel->getMh(), CURLMOPT_MAXCONNECTS, 1);
+        curl_multi_add_handle($this->multi_handler, $this->curl_handler);
+        curl_multi_setopt($this->multi_handler, CURLMOPT_PIPELINING, 1);
+        curl_multi_setopt($this->multi_handler, CURLMOPT_MAXCONNECTS, 1);
 
-        curl_multi_add_handle($this->channel->getMh(), $this->ch);
+        curl_multi_add_handle($this->multi_handler, $this->curl_handler);
         $active = null;
-        curl_multi_exec($this->channel->getMh(), $active);
+        while($this->call_status != "send_request_done"){
+            curl_multi_exec($this->multi_handler, $active);
+        }
     }
 
     /**
@@ -120,20 +127,23 @@ class UnaryCall extends AbstractCall
      */
     public function wait()
     {
-        if($this->receive_new_data) {
-            return [$this->received_data, 200];
-        }
         $active = null;
         do {
-            curl_multi_exec($this->channel->getMh(), $active);
-            if($this->receive_new_data) {
-                // TODO: close until ($this->stream_end=true)
-                curl_multi_remove_handle($this->channel->getMh(), $this->ch);
-                curl_close($this->ch);
+            if($this->has_new_received_data) {
+                // TODO: close until ($this->stream_end=true)$info = curl_multi_info_read($this->multi_handler);
+                curl_multi_remove_handle($this->multi_handler, $this->curl_handler);
+                curl_close($this->curl_handler);
+                // TODO: return value should be grpc-status from trailer.
                 return [$this->received_data, 200];
             }
-            curl_multi_select($this->channel->getMh());
-        } while ($active > 0);
+            curl_multi_exec($this->multi_handler, $active);
+            curl_multi_select($this->multi_handler);
+            $info = curl_multi_info_read($this->multi_handler);
+            if (false !== $info) {
+                $done_ch = $info['handle'];
+                $this->channel->unregister_ch($done_ch);
+            }
+        } while ($active > 0 || $this->has_new_received_data);
     }
 
     /**

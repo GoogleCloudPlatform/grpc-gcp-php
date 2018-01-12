@@ -33,12 +33,16 @@ abstract class AbstractCall
     protected $metadata;
     protected $trailing_metadata;
     protected $channel;
-    protected $ch;
+    protected $multi_handler;
+    protected $curl_handler;
+    // TODO define the enum below to constant
+    // send_status is enum of {"call_init", "send_request_done", "receive_response_begin", "call_done"}
+    protected $call_status = "call_init";
 
     /**
      * Create a new Call wrapper object.
      *
-     * @param resource  $channel     The channel to communicate on
+     * @param Channel  $channel     The channel to communicate on
      * @param string   $method      The method to call on the
      *                              remote server
      * @param callback $deserialize A callback function to deserialize
@@ -51,29 +55,65 @@ abstract class AbstractCall
                                 array $options = [])
     {
         // TODO: check Timeout,etc from $options
-        // TODO: call credentials?
-        $this->ch = curl_init();
-        $headers[] = 'custom-header-1: value1';
-        $headers[] = 'Content-Type: application/grpc-web-text';
-        $headers[] = 'Accept: application/grpc-web-text';
-
-        curl_setopt($this->ch, CURLOPT_POST, 1);
-        curl_setopt($this->ch, CURLOPT_URL, $method);
-        curl_setopt($this->ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
-        // TODO: add curl_setopt($this->ch, $channel->getCurlOpt();
-
-        $this->channel = $channel->getMh();
+        // TODO: add ssl
+        // TODO: add call credentials
+        // TODO: add custom header
+        $this->curl_handler = curl_init();
+        $headers[] = "Content-Type: application/grpc";
+        $headers[] = "TE: trailers";
+        $options = array(
+            CURLOPT_URL            => $method,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_POST            => true,
+            CURLOPT_HTTP_VERSION    => CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE,
+            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_SSL_VERIFYPEER => 0,
+            CURLINFO_HEADER_OUT => true,
+            CURLOPT_HEADERFUNCTION => array($this, 'header_callback'),
+            CURLOPT_VERBOSE => 1,
+        );
+        curl_setopt_array($this->curl_handler, $options);
+        $this->channel = $channel;
+        $this->multi_handler = $channel->getMh();
         $this->deserialize = $deserialize;
         $this->metadata = null;
         $this->trailing_metadata = null;
+        $this->channel->register_ch($this->curl_handler);
+    }
+
+    public function header_callback($ch, $header_line)
+    {
+        $first_colume_idx = strpos($header_line, ':');
+        if ($first_colume_idx === false) {
+            $key = $header_line;
+            $value = "";
+        } else {
+            $key = substr($header_line, 0, $first_colume_idx);
+            $value = substr($header_line, $first_colume_idx + 1);
+        }
+        // Header received after receiving data frame is counted as trailer
+        if($this->call_status == "receive_response_begin"){
+            // TODO create a struct to save trailer
+            // TODO: update trailer process after new libcurl is released
+            // Currently, libcurl has bug which all trailers after 2nd are read incorrectly.
+            // https://github.com/curl/curl/commit/fa3dbb9a147488a2943bda809c66fc497efe06cb
+            // Only precess the first trailer "grpc-status" for now.
+            if($key == "grpc-status") {
+                echo "[AbstractCall.php] Receive Treailer: $header_line" . PHP_EOL;
+            }
+        } else {
+            // TODO create a struct to save header
+            echo "[AbstractCall.php] Receive Header: $header_line".PHP_EOL;
+        }
+        return strlen($header_line);
     }
 
     /**
      * @param mixed $argument The data to decode
      * @return string Base64 decoded massage
      */
-    public function _base64encode($argument) {
+    public function _encode($argument) {
         $serialized_data = $argument->serializeToString();
         $len = strlen($serialized_data);
         $bytesArray = [0, 0, 0, 0, 0];
@@ -84,7 +124,7 @@ abstract class AbstractCall
         $serialized_data_byte = unpack('C*', $serialized_data);
         $argument_data_byte = array_merge($bytesArray, $serialized_data_byte);
         $argument_data_string = implode(array_map("chr", $argument_data_byte));
-        return base64_encode($argument_data_string);
+        return $argument_data_string;
     }
 
     /**
@@ -147,7 +187,6 @@ abstract class AbstractCall
         if ($value === null) {
             return;
         }
-
         // Proto3 implementation
         if (is_array($this->deserialize)) {
             list($className, $deserializeFunc) = $this->deserialize;
