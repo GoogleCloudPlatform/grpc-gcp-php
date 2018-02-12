@@ -3,6 +3,7 @@ namespace FireStore\ApiMethods;
 
 use Google\Cloud\Firestore\V1beta1\FirestoreClient;
 use FireStore\DocumentNameBuilder;
+use Google\Cloud\Firestore\V1beta1\GetDocumentRequest;
 
 class GetDocument
 {
@@ -15,7 +16,14 @@ class GetDocument
         
         echo str_pad('-', 79, '-') . "\n";
         
-        $document = $client->getDocument($documentName);
+        $argument = new GetDocumentRequest();
+        $argument->setName($documentName);
+        
+        list($document, $status) = $client->GetDocument($argument)->wait();
+        if($status->code) {
+        	echo "!Failed fetching document: '.$status->details.'!\n";
+        	return;
+        }
         
         echo "Document Name: $documentName";
         echo "\nCreated: " . date(DATE_RFC822, $document->getCreateTime()->getSeconds());

@@ -4,6 +4,7 @@ namespace FireStore\ApiMethods;
 use Google\Cloud\Firestore\V1beta1\FirestoreClient;
 use FireStore\DocumentNameBuilder;
 use FireStore\DatabaseRootNameBuilder;
+use Google\Cloud\Firestore\V1beta1\BatchGetDocumentsRequest;
 
 class BatchGetDocuments
 {
@@ -19,12 +20,13 @@ class BatchGetDocuments
             $documents[] = $documentNameBuilder->build();
         }
         
-        $stream = $client->batchGetDocuments(
-            $databaseRootNameBuilder->build(),
-            $documents
-        );
+        $argument = new BatchGetDocumentsRequest();
+        $argument->setDocuments($documents);
+        $argument->setDatabase($databaseRootNameBuilder->build());
         
-        foreach ($stream->readAll() as $element) {
+        $stream = $client->BatchGetDocuments($argument);
+        
+        foreach ($stream->responses() as $element) {
             $result = $element->getResult();
            
             if ($element->getFound()) {

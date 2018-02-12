@@ -13,6 +13,7 @@ use Google\Protobuf\Timestamp;
 use Google\Protobuf\Internal\GPBType;
 use Google\Protobuf\Internal\MapField;
 use FireStore\DocumentNameBuilder;
+use Google\Cloud\Firestore\V1beta1\CommitRequest;
 
 class Commit
 {
@@ -65,12 +66,17 @@ class Commit
         $write->setUpdateMask($mask);
         $writes[] = $write;
         
-        $response = $client->commit(
-            $databaseRootNameBuilder->build(),
-            $writes,
-            ['transaction' => $transaction->getTransaction()]
-        );
+        $argument = new CommitRequest();
+        $argument->setWrites($writes);
+        $argument->setDatabase($databaseRootNameBuilder->build());
+        $argument->setTransaction($transaction->getTransaction());
         
-        echo "Comitted\n";
+        list($reply, $status) = $client->Commit($argument)->wait();
+        if(!$status->code) {
+        	echo "Comitted\n";
+        }
+        else {
+        	echo "!Failed to commit: '.$status->details.'!\n";
+        }
     }
 }

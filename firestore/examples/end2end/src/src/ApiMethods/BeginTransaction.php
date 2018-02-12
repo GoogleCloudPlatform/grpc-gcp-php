@@ -7,6 +7,7 @@ use Google\Protobuf\Timestamp;
 use Google\Cloud\Firestore\V1beta1\TransactionOptions_ReadOnly;
 use Google\Cloud\Firestore\V1beta1\TransactionOptions;
 use Google\Cloud\Firestore\V1beta1\TransactionOptions_ReadWrite;
+use Google\Cloud\Firestore\V1beta1\BeginTransactionRequest;
 
 class BeginTransaction
 {
@@ -41,9 +42,12 @@ class BeginTransaction
         }
         echo "Transaction started\n";
         
-        return $client->beginTransaction(
-            $databaseRootNameBuilder->build(),
-            ['options' => $options]
-        );
+        $argument = new BeginTransactionRequest();
+        $argument->setDatabase($databaseRootNameBuilder->build());
+        $argument->setOptions($options);
+        
+        list($transaction, $status) = $client->BeginTransaction($argument)->wait();
+        
+        return $transaction;
     }
 }

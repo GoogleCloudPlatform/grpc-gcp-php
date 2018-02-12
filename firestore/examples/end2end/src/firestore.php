@@ -4,28 +4,29 @@
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
-use Google\Cloud\Firestore\V1beta1\FirestoreClient;
-use FireStore\DocumentNameBuilder;
-use FireStore\DatabaseRootNameBuilder;
-use FireStore\ParentResourceNameBuilder;
-use FireStore\ApiMethods\GetDocument;
 use FireStore\ApiMethods\BatchGetDocuments;
 use FireStore\ApiMethods\BeginTransaction;
 use FireStore\ApiMethods\Commit;
 use FireStore\ApiMethods\CreateDocument;
 use FireStore\ApiMethods\DeleteDocument;
+use FireStore\ApiMethods\GetDocument;
 use FireStore\ApiMethods\ListCollectionIds;
 use FireStore\ApiMethods\ListDocuments;
 use FireStore\ApiMethods\Rollback;
 use FireStore\ApiMethods\RunQuery;
-use FireStore\StructuredQueryBuilder;
 use FireStore\ApiMethods\UpdateDocument;
-use Symfony\Component\Console\Input\InputDefinition;
+use FireStore\DatabaseRootNameBuilder;
+use FireStore\DocumentNameBuilder;
+use FireStore\ParentResourceNameBuilder;
+use FireStore\StructuredQueryBuilder;
+use Google\Auth\ApplicationDefaultCredentials;
+use Google\Cloud\Firestore\V1beta1\FirestoreClient;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputDefinition;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
 $apis = [
     'BatchGetDocuments',
@@ -113,7 +114,17 @@ $apis = [
             throw new \BadFunctionCallException("Api $api not available");
         }
         
-        $firestoreClient = new FirestoreClient([]);
+        $host = "firestore.googleapis.com";
+        $credentials = \Grpc\ChannelCredentials::createSsl();
+        
+        // WARNING: the environment variable "GOOGLE_APPLICATION_CREDENTIALS" needs to be set
+        $auth = ApplicationDefaultCredentials::getCredentials();
+        $opts = [
+        		'credentials' => $credentials,
+        		'update_metadata' => $auth->getUpdateMetadataFunc(),
+        ];
+        
+        $firestoreClient = new FirestoreClient($host, $opts);
         
         if ($collectionid) {
             $documentNameBuilder = new DocumentNameBuilder(

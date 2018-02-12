@@ -4,6 +4,7 @@ namespace FireStore\ApiMethods;
 use Google\Cloud\Firestore\V1beta1\FirestoreClient;
 use FireStore\ParentResourceNameBuilder;
 use Google\Cloud\Firestore\V1beta1\StructuredQuery;
+use Google\Cloud\Firestore\V1beta1\RunQueryRequest;
 
 class RunQuery
 {
@@ -14,13 +15,14 @@ class RunQuery
         StructuredQuery $query
     ) {
         
-        $stream = $client->runQuery(
-            $parentResourceNameBuilder->build(),
-            ['structuredQuery' => $query]
-        );
-        
+    	$argument = new RunQueryRequest();
+    	$argument->setParent($parentResourceNameBuilder->build());
+    	$argument->setStructuredQuery($query);
+    	
+    	$stream = $client->RunQuery($argument);
+
         $index = 0;
-        foreach ($stream->readAll() as $response) {
+        foreach ($stream->responses() as $response) {
             $document = $response->getDocument();
             if (null == $document) {
                 continue;

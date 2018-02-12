@@ -39,9 +39,6 @@ class DatabaseRootNameBuilder
 
     public function build()
     {
-        return $this->firestoreClient->databaseRootName(
-            $this->projectId,
-            $this->database
-        );
+    	return 'projects/'.$this->projectId.'/databases/'.$this->database;
     }
 }

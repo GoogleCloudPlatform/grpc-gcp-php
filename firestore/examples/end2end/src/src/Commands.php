@@ -2,6 +2,7 @@
 namespace FireStore;
 
 use Google\Cloud\Firestore\V1beta1\FirestoreClient;
+use Google\Auth\ApplicationDefaultCredentials;
 
 /**
  * These are the different commands that can be called from the cli.php
@@ -45,7 +46,17 @@ class Commands
          *         See the config/application.config.php file for details
          *
          */
-        $this->firestoreClient = new FirestoreClient($this->config['firestore']['options']);
+        $host = "firestore.googleapis.com";
+        $credentials = \Grpc\ChannelCredentials::createSsl();
+        
+        // WARNING: the environment variable "GOOGLE_APPLICATION_CREDENTIALS" needs to be set
+        $auth = ApplicationDefaultCredentials::getCredentials();
+        $opts = [
+        		'credentials' => $credentials,
+        		'update_metadata' => $auth->getUpdateMetadataFunc(),
+        ];
+        
+        $this->firestoreClient = new FirestoreClient($host, $opts);
         
         $this->documentNameBuilder = new DocumentNameBuilder(
             $this->config['firestore']['projectId'],
