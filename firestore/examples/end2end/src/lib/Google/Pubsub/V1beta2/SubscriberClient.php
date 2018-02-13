@@ -94,7 +94,7 @@ class SubscriberClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.pubsub.v1beta2.Subscriber/DeleteSubscription',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 
@@ -111,7 +111,7 @@ class SubscriberClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.pubsub.v1beta2.Subscriber/ModifyAckDeadline',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 
@@ -131,7 +131,7 @@ class SubscriberClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.pubsub.v1beta2.Subscriber/Acknowledge',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 
@@ -168,7 +168,7 @@ class SubscriberClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.pubsub.v1beta2.Subscriber/ModifyPushConfig',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 

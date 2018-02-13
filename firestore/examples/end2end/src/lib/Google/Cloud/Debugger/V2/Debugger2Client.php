@@ -81,7 +81,7 @@ class Debugger2Client extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.devtools.clouddebugger.v2.Debugger2/DeleteBreakpoint',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 

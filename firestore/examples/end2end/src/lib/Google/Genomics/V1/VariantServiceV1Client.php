@@ -156,7 +156,7 @@ class VariantServiceV1Client extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.genomics.v1.VariantServiceV1/DeleteVariantSet',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 
@@ -252,7 +252,7 @@ class VariantServiceV1Client extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.genomics.v1.VariantServiceV1/DeleteVariant',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 
@@ -374,7 +374,7 @@ class VariantServiceV1Client extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.genomics.v1.VariantServiceV1/MergeVariants',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 
@@ -451,7 +451,7 @@ class VariantServiceV1Client extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.genomics.v1.VariantServiceV1/DeleteCallSet',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 

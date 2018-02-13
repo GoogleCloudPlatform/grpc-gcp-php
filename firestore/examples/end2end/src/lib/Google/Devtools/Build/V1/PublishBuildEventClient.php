@@ -65,7 +65,7 @@ class PublishBuildEventClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.devtools.build.v1.PublishBuildEvent/PublishLifecycleEvent',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 

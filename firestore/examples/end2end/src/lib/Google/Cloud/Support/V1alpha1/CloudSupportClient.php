@@ -74,7 +74,7 @@ class CloudSupportClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.cloud.support.v1alpha1.CloudSupport/GetCase',
         $argument,
-        ['\Google\Cloud\Support\Common\Case', 'decode'],
+        ['\Google\Cloud\Support\Common\PBCase', 'decode'],
         $metadata, $options);
     }
 
@@ -120,7 +120,7 @@ class CloudSupportClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.cloud.support.v1alpha1.CloudSupport/CreateCase',
         $argument,
-        ['\Google\Cloud\Support\Common\Case', 'decode'],
+        ['\Google\Cloud\Support\Common\PBCase', 'decode'],
         $metadata, $options);
     }
 
@@ -135,7 +135,7 @@ class CloudSupportClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.cloud.support.v1alpha1.CloudSupport/UpdateCase',
         $argument,
-        ['\Google\Cloud\Support\Common\Case', 'decode'],
+        ['\Google\Cloud\Support\Common\PBCase', 'decode'],
         $metadata, $options);
     }
 

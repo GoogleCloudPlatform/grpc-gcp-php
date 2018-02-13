@@ -82,7 +82,7 @@ class ContainerAnalysisClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.devtools.containeranalysis.v1alpha1.ContainerAnalysis/DeleteOccurrence',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 
@@ -167,7 +167,7 @@ class ContainerAnalysisClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.devtools.containeranalysis.v1alpha1.ContainerAnalysis/DeleteNote',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 

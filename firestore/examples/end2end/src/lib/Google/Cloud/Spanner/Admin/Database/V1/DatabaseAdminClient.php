@@ -115,7 +115,7 @@ class DatabaseAdminClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.spanner.admin.database.v1.DatabaseAdmin/DropDatabase',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 

@@ -115,7 +115,7 @@ class PipelinesV1Alpha2Client extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.genomics.v1alpha2.PipelinesV1Alpha2/DeletePipeline',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 
@@ -146,7 +146,7 @@ class PipelinesV1Alpha2Client extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.genomics.v1alpha2.PipelinesV1Alpha2/SetOperationStatus',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 

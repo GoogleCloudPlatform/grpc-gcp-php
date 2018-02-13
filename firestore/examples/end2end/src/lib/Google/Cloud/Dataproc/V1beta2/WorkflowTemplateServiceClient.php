@@ -131,7 +131,7 @@ class WorkflowTemplateServiceClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.cloud.dataproc.v1beta2.WorkflowTemplateService/DeleteWorkflowTemplate',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 

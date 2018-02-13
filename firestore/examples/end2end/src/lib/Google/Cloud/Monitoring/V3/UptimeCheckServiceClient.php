@@ -111,7 +111,7 @@ class UptimeCheckServiceClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.monitoring.v3.UptimeCheckService/DeleteUptimeCheckConfig',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 

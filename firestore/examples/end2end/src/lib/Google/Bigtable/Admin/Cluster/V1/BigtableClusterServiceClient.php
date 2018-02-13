@@ -163,7 +163,7 @@ class BigtableClusterServiceClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.bigtable.admin.cluster.v1.BigtableClusterService/DeleteCluster',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 

@@ -138,7 +138,7 @@ class FirestoreAdminClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.firestore.admin.v1beta1.FirestoreAdmin/DeleteIndex',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 

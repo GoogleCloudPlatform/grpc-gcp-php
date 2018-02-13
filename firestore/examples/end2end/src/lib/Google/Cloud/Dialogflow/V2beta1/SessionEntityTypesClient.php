@@ -103,7 +103,7 @@ class SessionEntityTypesClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.cloud.dialogflow.v2beta1.SessionEntityTypes/DeleteSessionEntityType',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 

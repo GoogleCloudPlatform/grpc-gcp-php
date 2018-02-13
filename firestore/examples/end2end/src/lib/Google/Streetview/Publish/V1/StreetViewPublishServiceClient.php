@@ -41,11 +41,11 @@ class StreetViewPublishServiceClient extends \Grpc\BaseStub {
      * After the upload is complete, the `UploadRef` is used with
      * `StreetViewPublishService:CreatePhoto()` to create the `Photo` object
      * entry.
-     * @param \Google\Protobuf\Empty $argument input argument
+     * @param \Google\Protobuf\GPBEmpty $argument input argument
      * @param array $metadata metadata
      * @param array $options call options
      */
-    public function StartUpload(\Google\Protobuf\Empty $argument,
+    public function StartUpload(\Google\Protobuf\GPBEmpty $argument,
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.streetview.publish.v1.StreetViewPublishService/StartUpload',
         $argument,
@@ -189,7 +189,7 @@ class StreetViewPublishServiceClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.streetview.publish.v1.StreetViewPublishService/DeletePhoto',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 

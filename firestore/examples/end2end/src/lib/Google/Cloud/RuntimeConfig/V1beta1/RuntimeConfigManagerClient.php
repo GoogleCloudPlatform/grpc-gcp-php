@@ -108,7 +108,7 @@ class RuntimeConfigManagerClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.cloud.runtimeconfig.v1beta1.RuntimeConfigManager/DeleteConfig',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 
@@ -218,7 +218,7 @@ class RuntimeConfigManagerClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.cloud.runtimeconfig.v1beta1.RuntimeConfigManager/DeleteVariable',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 
@@ -278,7 +278,7 @@ class RuntimeConfigManagerClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.cloud.runtimeconfig.v1beta1.RuntimeConfigManager/DeleteWaiter',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 

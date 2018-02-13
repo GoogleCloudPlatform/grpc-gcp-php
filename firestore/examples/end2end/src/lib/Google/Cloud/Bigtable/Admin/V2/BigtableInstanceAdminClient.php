@@ -114,7 +114,7 @@ class BigtableInstanceAdminClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.bigtable.admin.v2.BigtableInstanceAdmin/DeleteInstance',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 
@@ -184,7 +184,7 @@ class BigtableInstanceAdminClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.bigtable.admin.v2.BigtableInstanceAdmin/DeleteCluster',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 
@@ -279,7 +279,7 @@ class BigtableInstanceAdminClient extends \Grpc\BaseStub {
       $metadata = [], $options = []) {
         return $this->_simpleRequest('/google.bigtable.admin.v2.BigtableInstanceAdmin/DeleteAppProfile',
         $argument,
-        ['\Google\Protobuf\Empty', 'decode'],
+        ['\Google\Protobuf\GPBEmpty', 'decode'],
         $metadata, $options);
     }
 
