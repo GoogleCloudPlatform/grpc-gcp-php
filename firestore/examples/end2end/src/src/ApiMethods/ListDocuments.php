@@ -18,9 +18,9 @@ class ListDocuments
     	$argument->setParent($parentResourceNameBuilder->build());
     	$argument->setCollectionId($collectionId);
     	
-    	list($pagedResponse, $status) = $client->ListDocuments($argument)->wait();
-    	if($status->code) {
-    		echo "!Failed listing document: '.$status->details.'!\n";
+    	list($pagedResponse, $error) = $client->ListDocuments($argument)->wait();
+    	if($error->code) {
+    		echo "!Failed listing document: '.$error->details.'!\n";
     		return;
     	}
     	

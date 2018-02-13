@@ -24,13 +24,13 @@ class CreateDocument
         $argument->setDocumentId($docId);
         $argument->setDocument($document);
         
-        list ($document, $status) = $client->CreateDocument($argument)->wait();
-        if(!$status->code) {
+        list ($document, $error) = $client->CreateDocument($argument)->wait();
+        if(!$error->code) {
         	echo "Successfully created new document!\n";
         	echo "Name: {$document->getName()}\n";
         }
         else {
-        	echo "!Failed to create document: '.$status->details.'!\n";
+        	echo "!Failed to create document: '.$error->details.'!\n";
         }
     }
 }

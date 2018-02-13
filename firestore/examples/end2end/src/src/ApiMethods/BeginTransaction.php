@@ -46,7 +46,7 @@ class BeginTransaction
         $argument->setDatabase($databaseRootNameBuilder->build());
         $argument->setOptions($options);
         
-        list($transaction, $status) = $client->BeginTransaction($argument)->wait();
+        list($transaction, $error) = $client->BeginTransaction($argument)->wait();
         
         return $transaction;
     }

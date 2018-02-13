@@ -71,12 +71,12 @@ class Commit
         $argument->setDatabase($databaseRootNameBuilder->build());
         $argument->setTransaction($transaction->getTransaction());
         
-        list($reply, $status) = $client->Commit($argument)->wait();
-        if(!$status->code) {
+        list($reply, $error) = $client->Commit($argument)->wait();
+        if(!$error->code) {
         	echo "Comitted\n";
         }
         else {
-        	echo "!Failed to commit: '.$status->details.'!\n";
+        	echo "!Failed to commit: '.$error->details.'!\n";
         }
     }
 }

@@ -29,9 +29,9 @@ class UpdateDocument
         $argument = new GetDocumentRequest();
         $argument->setName($documentName);
         
-        list($document, $status) = $client->GetDocument($argument)->wait();
-        if($status->code) {
-        	echo "!Failed fetching document: '.$status->details.'!\n";
+        list($document, $error) = $client->GetDocument($argument)->wait();
+        if($error->code) {
+        	echo "!Failed fetching document: '.$error->details.'!\n";
         	return;
         }
         
@@ -50,12 +50,12 @@ class UpdateDocument
         $argument->setMask($updateMask);
         $argument->setDocument($document);
         
-        list ($document, $status) = $client->UpdateDocument($argument)->wait();
-        if(!$status->code) {
+        list ($document, $error) = $client->UpdateDocument($argument)->wait();
+        if(!$error->code) {
         	echo "Update document was successful.";
         }
         else {
-        	echo "Failed updating document. Error was: ".$status->details;
+        	echo "Failed updating document. Error was: ".$error->details;
         }
         
         return $document;

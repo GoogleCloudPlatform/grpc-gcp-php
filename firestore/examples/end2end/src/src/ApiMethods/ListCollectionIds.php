@@ -15,8 +15,8 @@ class ListCollectionIds
         $argument = new ListCollectionIdsRequest();
         $argument->setParent($parentResourceNameBuilder->build());
         
-        list($reply, $status) = $client->ListCollectionIds($argument)->wait();
-        if(!$status->code) {
+        list($reply, $error) = $client->ListCollectionIds($argument)->wait();
+        if(!$error->code) {
         	$collections = $reply->getCollectionIds();
         	foreach($collections as $collection) {
         		echo "$collection\n";

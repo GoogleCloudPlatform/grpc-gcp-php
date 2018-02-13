@@ -22,12 +22,12 @@ class DeleteDocument
         $argument = new DeleteDocumentRequest();
         $argument->setName($documentNameBuilder->build());
         
-        list ($document, $status) = $client->DeleteDocument($argument)->wait();
-        if(!$status->code) {
+        list ($document, $error) = $client->DeleteDocument($argument)->wait();
+        if(!$error->code) {
         	echo "Successfully deleted document!\n";
         }
         else {
-        	echo "!Failed to delete document: '.$status->details.'!\n";
+        	echo "!Failed to delete document: '.$error->details.'!\n";
         }
     }
 }

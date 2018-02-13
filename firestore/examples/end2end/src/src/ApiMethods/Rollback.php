@@ -19,12 +19,12 @@ class Rollback
         $argument = new RollbackRequest();
         $argument->setTransaction($transaction->getTransaction());
         $argument->setDatabase( $databaseRootNameBuilder->build());
-        list($transaction, $status) = $client->Rollback($argument)->wait();
-        if(!$status->code) {
+        list($transaction, $error) = $client->Rollback($argument)->wait();
+        if(!$error->code) {
         	echo "Rollback done\n";
         }
         else {
-        	echo "!Failed to rollback transaction: '.$status->details.'!\n";
+        	echo "!Failed to rollback transaction: '.$error->details.'!\n";
         }
     }
 }

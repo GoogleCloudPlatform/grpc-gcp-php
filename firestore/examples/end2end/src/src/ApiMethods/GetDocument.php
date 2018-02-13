@@ -19,9 +19,9 @@ class GetDocument
         $argument = new GetDocumentRequest();
         $argument->setName($documentName);
         
-        list($document, $status) = $client->GetDocument($argument)->wait();
-        if($status->code) {
-        	echo "!Failed fetching document: '.$status->details.'!\n";
+        list($document, $error) = $client->GetDocument($argument)->wait();
+        if($error->code) {
+        	echo "!Failed fetching document: '.$error->details.'!\n";
         	return;
         }
         

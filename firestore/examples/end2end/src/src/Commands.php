@@ -3,6 +3,7 @@ namespace FireStore;
 
 use Google\Cloud\Firestore\V1beta1\FirestoreClient;
 use Google\Auth\ApplicationDefaultCredentials;
+use Google\Firestore\Admin\V1beta1\FirestoreAdminClient;
 
 /**
  * These are the different commands that can be called from the cli.php
@@ -13,6 +14,11 @@ class Commands
      * @var FirestoreClient
      */
     private $firestoreClient;
+    
+    /**
+     * @var FirestoreAdminClient
+     */
+    private $firestoreAdminClient;
     
     /**
      * Application Config
@@ -26,6 +32,12 @@ class Commands
      * @var DocumentNameBuilder
      */
     private $documentNameBuilder;
+    
+    /**
+     * 
+     * @var DatabaseRootNameBuilder 
+     */
+    private $databaseRootNameBuilder;
     
     public function __construct()
     {
@@ -58,10 +70,17 @@ class Commands
         
         $this->firestoreClient = new FirestoreClient($host, $opts);
         
+        $this->firestoreAdminClient = new FirestoreAdminClient($host, $opts);
+        
         $this->documentNameBuilder = new DocumentNameBuilder(
             $this->config['firestore']['projectId'],
             $this->config['firestore']['database'],
             $this->config['firestore']['collectionId']
+        );
+        
+        $this->databaseRootNameBuilder = new DatabaseRootNameBuilder(
+        		$this->config['firestore']['projectId'],
+        		$this->config['firestore']['database']
         );
     }
 
@@ -88,15 +107,9 @@ class Commands
             return $this->batchGetDocuments($docIds);
         }
         
-        $databaseRootNameBuilder = new DatabaseRootNameBuilder(
-            $this->firestoreClient,
-            $this->config['firestore']['projectId'],
-            $this->config['firestore']['database']
-        );
-        
         (new ApiMethods\BatchGetDocuments)(
             $this->firestoreClient,
-            $databaseRootNameBuilder,
+            $this->databaseRootNameBuilder,
             $this->documentNameBuilder,
             $docIds
         );
@@ -107,16 +120,10 @@ class Commands
      * @grpc
      */
     private function beginTransaction($readWrite = false)
-    {
-        $databaseRootNameBuilder = new DatabaseRootNameBuilder(
-            $this->firestoreClient,
-            $this->config['firestore']['projectId'],
-            $this->config['firestore']['database']
-        );
-        
+    {   
         return (new ApiMethods\BeginTransaction)(
             $this->firestoreClient,
-            $databaseRootNameBuilder,
+            $this->databaseRootNameBuilder,
             $readWrite
         );
     }
@@ -127,17 +134,11 @@ class Commands
      */
     private function commit()
     {
-        $databaseRootNameBuilder = new DatabaseRootNameBuilder(
-            $this->firestoreClient,
-            $this->config['firestore']['projectId'],
-            $this->config['firestore']['database']
-        );
-        
         $transaction = $this->beginTransaction(true);
         
         (new ApiMethods\Commit)(
             $this->firestoreClient,
-            $databaseRootNameBuilder,
+            $this->databaseRootNameBuilder,
             $this->documentNameBuilder,
             $transaction
         );
@@ -252,17 +253,11 @@ class Commands
      */
     private function rollback()
     {
-        $databaseRootNameBuilder = new DatabaseRootNameBuilder(
-            $this->firestoreClient,
-            $this->config['firestore']['projectId'],
-            $this->config['firestore']['database']
-        );
-        
         $transaction = $this->beginTransaction();
         
         (new ApiMethods\Rollback)(
             $this->firestoreClient,
-            $databaseRootNameBuilder,
+            $this->databaseRootNameBuilder,
             $transaction
         );
     }
@@ -352,8 +347,29 @@ EOF;
      */
     private function createIndex()
     {
-        // Unable to find PHP documentation for those methods
-        throw new \Exception("PHP classes are not existing for this functionality");
+    	echo "\n    :: Create Index... ::\n";
+    	echo "------------------------------------------\n\n";
+    	
+    	$prompt = <<<'EOF'
+collectionId;Collection Name:
+name;Enter Index Name:
+field1;Enter Field 1 Name (should be existing field):
+field2;Enter Field 2 Name (should be existing field):
+EOF;
+    	
+    	$userInput = [];
+    	foreach ($this->getInputParser($prompt)() as $key => $value) {
+    		$userInput[$key] = $value;
+    	}
+    	
+    	(new ApiMethods\Admin\CreateIndex)(
+    			$this->firestoreAdminClient,
+    			$this->databaseRootNameBuilder,
+    			$userInput['collectionId'],
+    			$userInput['name'],
+    			$userInput['field1'],
+    			$userInput['field2']
+    	);
     }
     
     /**
@@ -362,8 +378,23 @@ EOF;
      */
     private function deleteIndex()
     {
-        // Unable to find PHP documentation for those methods
-        throw new \Exception("PHP classes are not existing for this functionality");
+    	echo "\n    :: Delete Index... ::\n";
+    	echo "------------------------------------------\n\n";
+    	
+    	$prompt = <<<'EOF'
+name;Enter Index Name:
+EOF;
+    	
+    	$userInput = [];
+    	foreach ($this->getInputParser($prompt)() as $key => $value) {
+    		$userInput[$key] = $value;
+    	}
+    	
+    	(new ApiMethods\Admin\DeleteIndex)(
+    			$this->firestoreAdminClient,
+    			$this->databaseRootNameBuilder,
+    			$userInput['name']
+    	);
     }
     
     /**
@@ -372,18 +403,38 @@ EOF;
      */
     private function getIndex()
     {
-        // Unable to find PHP documentation for those methods
-        throw new \Exception("PHP classes are not existing for this functionality");
+    	echo "\n    :: Get Index... ::\n";
+    	echo "------------------------------------------\n\n";
+    	
+    	$prompt = <<<'EOF'
+name;Enter Index Name:
+EOF;
+    	
+    	$userInput = [];
+    	foreach ($this->getInputParser($prompt)() as $key => $value) {
+    		$userInput[$key] = $value;
+    	}
+
+    	(new ApiMethods\Admin\GetIndex)(
+    			$this->firestoreAdminClient,
+    			$this->databaseRootNameBuilder,
+    			$userInput['name']
+    			);
     }
     
     /**
      * @grpc
      * @admin
      */
-    private function listIndex()
+    private function listIndexes()
     {
-        // Unable to find PHP documentation for those methods
-        throw new \Exception("PHP classes are not existing for this functionality");
+    	echo "\n    :: Listing Index... ::\n";
+    	echo "------------------------------------------\n\n";
+    	
+    	(new ApiMethods\Admin\ListIndexes)(
+    			$this->firestoreAdminClient,
+    			$this->databaseRootNameBuilder
+    	);
     }
     
     /**
@@ -446,7 +497,7 @@ EOF;
     
     public function run($idx)
     {
-        $allOptions = $this->getOptions() + $this->getOptions(true);
+        $allOptions = array_merge($this->getOptions(), $this->getOptions(true));
         if (!isset($allOptions[$idx - 1])) {
             return $this->usage();
         }
