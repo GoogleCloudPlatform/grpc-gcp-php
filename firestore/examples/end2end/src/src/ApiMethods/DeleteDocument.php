@@ -4,6 +4,7 @@ namespace FireStore\ApiMethods;
 use Google\Cloud\Firestore\V1beta1\FirestoreClient;
 use Google\Cloud\Firestore\V1beta1\Document;
 use FireStore\DocumentNameBuilder;
+use Google\Cloud\Firestore\V1beta1\DeleteDocumentRequest;
 
 class DeleteDocument
 {
@@ -18,8 +19,15 @@ class DeleteDocument
         
         $documentNameBuilder->setDocumentId($docId);
         
-        $client->deleteDocument($documentNameBuilder->build());
+        $argument = new DeleteDocumentRequest();
+        $argument->setName($documentNameBuilder->build());
         
-        echo "Successfully deleted document!\n";
+        list ($document, $error) = $client->DeleteDocument($argument)->wait();
+        if(!$error->code) {
+        	echo "Successfully deleted document!\n";
+        }
+        else {
+        	echo "!Failed to delete document: '.$error->details.'!\n";
+        }
     }
 }

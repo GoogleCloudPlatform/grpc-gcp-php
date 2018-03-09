@@ -4,6 +4,7 @@ namespace FireStore\ApiMethods;
 use Google\Cloud\Firestore\V1beta1\FirestoreClient;
 use FireStore\ParentResourceNameBuilder;
 use Google\Cloud\Firestore\V1beta1\Document;
+use Google\Cloud\Firestore\V1beta1\CreateDocumentRequest;
 
 class CreateDocument
 {
@@ -17,14 +18,19 @@ class CreateDocument
         
         $document = new Document();
         
-        $document = $client->createDocument(
-            $parentResourceNameBuilder->build(),
-            $collectionId,
-            $docId,
-            $document
-        );
+        $argument = new CreateDocumentRequest();
+        $argument->setParent($parentResourceNameBuilder->build());
+        $argument->setCollectionId($collectionId);
+        $argument->setDocumentId($docId);
+        $argument->setDocument($document);
         
-        echo "Successfully created new document!\n";
-        echo "Name: {$document->getName()}\n";
+        list ($document, $error) = $client->CreateDocument($argument)->wait();
+        if(!$error->code) {
+        	echo "Successfully created new document!\n";
+        	echo "Name: {$document->getName()}\n";
+        }
+        else {
+        	echo "!Failed to create document: '.$error->details.'!\n";
+        }
     }
 }

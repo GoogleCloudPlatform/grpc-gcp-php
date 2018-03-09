@@ -7,6 +7,8 @@ use Google\Protobuf\Internal\MapField;
 use Google\Cloud\Firestore\V1beta1\Value;
 use Google\Protobuf\Internal\GPBType;
 use FireStore\DocumentNameBuilder;
+use Google\Cloud\Firestore\V1beta1\UpdateDocumentRequest;
+use Google\Cloud\Firestore\V1beta1\GetDocumentRequest;
 
 class UpdateDocument
 {
@@ -24,7 +26,14 @@ class UpdateDocument
         
         echo str_pad('-', 79, '-') . "\n";
         
-        $document = $client->getDocument($documentName);
+        $argument = new GetDocumentRequest();
+        $argument->setName($documentName);
+        
+        list($document, $error) = $client->GetDocument($argument)->wait();
+        if($error->code) {
+        	echo "!Failed fetching document: '.$error->details.'!\n";
+        	return;
+        }
         
         $updateMask = new DocumentMask();
         $updateMask->setFieldPaths([$fieldName]);
@@ -37,6 +46,18 @@ class UpdateDocument
         
         $document->setFields($field);
         
-        return $client->updateDocument($document, $updateMask);
+        $argument = new UpdateDocumentRequest();
+        $argument->setMask($updateMask);
+        $argument->setDocument($document);
+        
+        list ($document, $error) = $client->UpdateDocument($argument)->wait();
+        if(!$error->code) {
+        	echo "Update document was successful.";
+        }
+        else {
+        	echo "Failed updating document. Error was: ".$error->details;
+        }
+        
+        return $document;
     }
 }
