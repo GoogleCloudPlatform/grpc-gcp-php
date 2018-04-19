@@ -1,8 +1,0 @@
-{
-    "require": {
-        "google/cloud": "^0.62.0",
-        "ext-json": "*",
-        "ext-protobuf": "*",
-	"ext-curl": "*"
-    }
-}
