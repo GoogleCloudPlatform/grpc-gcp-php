@@ -1,9 +1,9 @@
-# Instruction for creating a gRPC client for google cloud services
+# Instructions for create a gRPC client for google cloud services
 
 ## Overview
 
-This instruction includes step by step guide for creating a gRPC 
-client to test the new google cloud service from an empty linux 
+This instruction includes a step by step guide for creating a gRPC 
+client to test the google cloud service from an empty linux 
 VM, using GCE ubuntu 16.04 TLS instance.
 
 The main steps are followed as steps below: 
@@ -69,15 +69,43 @@ $ mkdir $HOME/project
 $ protoc --proto_path=./ --php_out=$HOME/project \  
 --grpc_out=$HOME/project \
 --plugin=protoc-gen-grpc=./bins/opt/grpc_php_plugin \
-/path/to/your/proto_dependency_directory1/*.proto \
-/path/to/your/proto_dependency_directory2/*.proto \
-/path/to/your/proto_directory/*.proto
+path/to/your/proto_dependency_directory1/*.proto \
+path/to/your/proto_dependency_directory2/*.proto \
+path/to/your/proto_directory/*.proto
 
 ```
 
-However, since most of cloud services already publish proto files under 
-[googleapis github repo](https://github.com/googleapis/googleapis), I stronge
-recommend use it's Makefile to generate the client API.
+Take `Firestore` service under [googleapis github repo](https://github.com/googleapis/googleapis)
+for example. The proto files required for generating client API are
+```
+google/api/annotations.proto
+google/api/http.proto
+google/api/httpbody.proto
+google/longrunning/operations.proto
+google/rpc/code.proto
+google/rpc/error_details.proto
+google/rpc/status.proto
+google/type/latlng.proto
+google/firestore/v1beta1/firestore.proto
+google/firestore/v1beta1/common.proto
+google/firestore/v1beta1/query.proto
+google/firestore/v1beta1/write.proto
+google/firestore/v1beta1/document.proto
+```
+Thus the command looks like:
+```sh
+$ protoc --proto_path=googleapis --plugin=protoc-gen-grpc=`which grpc_php_plugin` \
+--php_out=./ --grpc_out=./ google/api/annotations.proto google/api/http.proto \
+google/api/httpbody.proto google/longrunning/operations.proto google/rpc/code.proto \
+google/rpc/error_details.proto google/rpc/status.proto google/type/latlng.proto \
+google/firestore/v1beta1/firestore.proto google/firestore/v1beta1/common.proto \
+google/firestore/v1beta1/query.proto google/firestore/v1beta1/write.proto \
+google/firestore/v1beta1/document.proto
+```
+
+Since most of cloud services already publish proto files under 
+[googleapis github repo](https://github.com/googleapis/googleapis),
+you can use it's Makefile to generate the client API.
 The `Makefile` will help you generate the client API as
 well as find the dependencies. The command will simply be:
 ```sh
