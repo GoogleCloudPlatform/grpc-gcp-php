@@ -4,6 +4,7 @@ use Google\Cloud\Logging\LoggingClient;
 putenv("GOOGLE_APPLICATION_CREDENTIALS=./grpcwebtesting_key.json");
 require_once './vendor/autoload.php';
 
+$start_time = microtime(true);
 $restLogger = LoggingClient::psrBatchLogger(
      'perf-rest',
      [
@@ -14,7 +15,6 @@ $restLogger = LoggingClient::psrBatchLogger(
         ]
 );
 
-$start_time = microtime(true);
 $restLogger->info('e');
 $first_latency = microtime(true) - $start_time;
 echo "rest latency for first RPC:". $first_latency. PHP_EOL;
