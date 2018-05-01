@@ -1,5 +1,7 @@
 {
     "require": {
-        "google/cloud": "^0.56.0"
+        "google/cloud": "^0.62.0",
+        "ext-json": "*",
+        "ext-protobuf": "*"
     }
 }
