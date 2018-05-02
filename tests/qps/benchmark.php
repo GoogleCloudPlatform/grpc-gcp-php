@@ -15,7 +15,7 @@ function generate_string($size)
     $seed = str_split('abcdefghijklmnopqrstuvwxyz'
         .'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         .'0123456789!@#$%^&*()');
-    $str_res = ''
+    $str_res = '';
     for($i=0; $i<$size; $i++) {
         $k = rand(0,71);
         $str_res .= $seed[$k];

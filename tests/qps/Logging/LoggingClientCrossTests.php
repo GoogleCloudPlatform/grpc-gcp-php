@@ -36,11 +36,11 @@ function qps_client_main($arg_warm_up, $arg_benchmark, $payload)
 
     // First latency
     $start_time = microtime(true);
-    $grpcLogger->info(generate_string($payload));
+    $grpcLogger->info("a");
     $grpc_first_latency = microtime(true) - $start_time;
 
     $start_time = microtime(true);
-    $restLogger->info(generate_string($payload));
+    $restLogger->info("b");
     $rest_first_latency = microtime(true) - $start_time;
 
     // Warm up
@@ -62,12 +62,14 @@ function qps_client_main($arg_warm_up, $arg_benchmark, $payload)
         }
         $benchmark_count += 1;
 
+        $msg_grpc = generate_string($payload);
         $grpc_start_time = microtime(true);
-        $grpcLogger->info('b');
+        $grpcLogger->info($msg_grpc);
         array_push($grpc_latency_array, microtime(true) - $grpc_start_time);
 
+        $msg_rest = generate_string($payload);
         $rest_start_time = microtime(true);
-        $restLogger->info('b');
+        $restLogger->info($msg_rest);
         array_push($rest_latency_array, microtime(true) - $rest_start_time);
     }
 
