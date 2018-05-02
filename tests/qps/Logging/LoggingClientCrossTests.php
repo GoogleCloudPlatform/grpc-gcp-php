@@ -4,7 +4,7 @@ require dirname(__FILE__).'/../vendor/autoload.php';
 require dirname(__FILE__).'/../benchmark.php';
 use Google\Cloud\Logging\LoggingClient;
 
-function qps_client_main($arg_warm_up, $arg_benchmark)
+function qps_client_main($arg_warm_up, $arg_benchmark, $payload)
 {
     // Disable the batch so each request stands for a RPC
     $grpcLogger = LoggingClient::psrBatchLogger(
@@ -36,11 +36,11 @@ function qps_client_main($arg_warm_up, $arg_benchmark)
 
     // First latency
     $start_time = microtime(true);
-    $grpcLogger->info('a');
+    $grpcLogger->info(generate_string($payload));
     $grpc_first_latency = microtime(true) - $start_time;
 
     $start_time = microtime(true);
-    $restLogger->info('a');
+    $restLogger->info(generate_string($payload));
     $rest_first_latency = microtime(true) - $start_time;
 
     // Warm up
@@ -84,5 +84,6 @@ function qps_client_main($arg_warm_up, $arg_benchmark)
 
 $arg_warmup = !empty($argv[1]) ? $argv[1] : 20;
 $arg_benchmark = !empty($argv[2]) ? $argv[2] : 40;
-qps_client_main($arg_warmup, $arg_benchmark);
+$payload = !empty($argv[3]) ? $argv[3] : 1;
+qps_client_main($arg_warmup, $arg_benchmark, $payload);
 
