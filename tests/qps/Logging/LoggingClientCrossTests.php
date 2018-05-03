@@ -33,15 +33,10 @@ function qps_client_main($arg_warm_up, $arg_benchmark, $payload)
     $benchmark_count = 0;
     $rest_latency_array = array();
     $grpc_latency_array = array();
-
-    // First latency
-    $start_time = microtime(true);
-    $grpcLogger->info("a");
-    $grpc_first_latency = microtime(true) - $start_time;
-
-    $start_time = microtime(true);
-    $restLogger->info("b");
-    $rest_first_latency = microtime(true) - $start_time;
+    for ($i = 0; $i < count($payload); $i++) {
+        $rest_latency_array[$i] = array();
+        $grpc_latency_array[$i] = array();
+    }
 
     // Warm up
     $start_time = microtime(true);
@@ -61,31 +56,41 @@ function qps_client_main($arg_warm_up, $arg_benchmark, $payload)
             break;
         }
         $benchmark_count += 1;
+        for ($i = 0; $i < count($payload); $i++) {
+            $payload_size = $payload[$i];
+            $msg_grpc = generate_string($payload_size);
+            $msg_rest = generate_string($payload_size);
 
-        $msg_grpc = generate_string($payload);
-        $grpc_start_time = microtime(true);
-        $grpcLogger->info($msg_grpc);
-        array_push($grpc_latency_array, microtime(true) - $grpc_start_time);
+            $grpc_start_time = microtime(true);
+            $grpcLogger->info($msg_grpc);
+            array_push($grpc_latency_array[$i], microtime(true) - $grpc_start_time);
 
-        $msg_rest = generate_string($payload);
-        $rest_start_time = microtime(true);
-        $restLogger->info($msg_rest);
-        array_push($rest_latency_array, microtime(true) - $rest_start_time);
+            $rest_start_time = microtime(true);
+            $restLogger->info($msg_rest);
+            array_push($rest_latency_array[$i], microtime(true) - $rest_start_time);
+        }
     }
 
-    echo "gRPC transport qps: ".($benchmark_count/array_sum($grpc_latency_array)).PHP_EOL;
-    echo "gRPC latency for first RPC:". $grpc_first_latency. PHP_EOL;
-    sort($grpc_latency_array);
-    print_stats("gRPC", $grpc_latency_array);
+    for ($i = 0; $i < count($payload); $i++) {
+        echo "=====================". PHP_EOL;
+        echo "payload: ". $payload[$i]. PHP_EOL;
+        echo "gRPC transport qps: " . ($benchmark_count / array_sum($grpc_latency_array[$i])) . PHP_EOL;
+        sort($grpc_latency_array[$i]);
+        print_stats("gRPC", $grpc_latency_array[$i]);
 
-    echo "rest transport qps: ". ($benchmark_count/array_sum($rest_latency_array)). PHP_EOL;
-    echo "rest latency for first RPC:". $rest_first_latency. PHP_EOL;
-    sort($rest_latency_array);
-    print_stats("REST", $rest_latency_array);
+        echo "rest transport qps: " . ($benchmark_count / array_sum($rest_latency_array[$i])) . PHP_EOL;
+        sort($rest_latency_array[$i]);
+        print_stats("REST", $rest_latency_array[$i]);
+    }
 }
 
-$arg_warmup = !empty($argv[1]) ? $argv[1] : 20;
+$arg_warmup = !empty($argv[1]) ? $argv[1] : 2;
 $arg_benchmark = !empty($argv[2]) ? $argv[2] : 40;
-$payload = !empty($argv[3]) ? $argv[3] : 1;
+$payload = array();
+if(!empty($argv[3])) {
+    $payload = array_map('intval', explode(',', $argv[3]));
+} else {
+    $payload = array(1, 10, 100, 1024, 10240);
+}
 qps_client_main($arg_warmup, $arg_benchmark, $payload);
 
