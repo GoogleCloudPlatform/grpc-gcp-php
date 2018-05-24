@@ -1,0 +1,5 @@
+{
+    "require": {
+        "grpc/grpc": "dev-master"
+    }
+}
