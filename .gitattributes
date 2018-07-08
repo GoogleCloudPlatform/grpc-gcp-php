@@ -1,0 +1,5 @@
+/.gitattributes export-ignore
+/*/.gitattributes export-ignore
+/.gitignore export-ignore
+/tests export-ignore
+/cloud-apis export-ignore
