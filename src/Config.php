@@ -47,6 +47,10 @@ class Config
         if (!$cacheItemPool) {
             // If there is no cacheItemPool, use shared memory for
             // caching the configuration and channel pool.
+            if (! extension_loaded('sysvshm')) {
+                throw \RuntimeException(
+                'sysvshm extension is required to use this ItemPool');
+            }
             $channel_pool_key = intval(base_convert(sha1($channel_pool_key), 16, 10));
             $shm_id = shm_attach(getmypid(), 200000, 0600);
             $var1 = @shm_get_var($shm_id, $channel_pool_key);
