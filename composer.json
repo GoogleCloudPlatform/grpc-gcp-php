@@ -9,7 +9,7 @@
     "require": {
         "php": ">=5.5.0",
         "google/protobuf": "^v3.3.0",
-        "grpc/grpc": "dev-master",
+        "grpc/grpc": "^v1.13.0",
         "psr/cache": "^1.0.1"
     },
     "require-dev": {
