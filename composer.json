@@ -1,6 +1,6 @@
 {
     "name": "google/grpc-gcp",
-    "description": "gRPC gcp library for channel management",
+    "description": "gRPC GCP library for channel management",
     "license": "Apache-2.0",
     "version": "0.1.0",
     "require": {
@@ -13,7 +13,7 @@
     "autoload": {
         "psr-4": {
             "Grpc\\Gcp\\": "src/",
-            "": ["src/generated/"]
+            "": "src/generated/"
         }
     }
 }
