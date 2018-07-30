@@ -2,7 +2,7 @@
     "name": "google/grpc-gcp",
     "description": "gRPC gcp library for channel management",
     "license": "Apache-2.0",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "config": {
         "preferred-install": "source"
     },
