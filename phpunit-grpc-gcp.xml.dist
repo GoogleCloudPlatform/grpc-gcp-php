@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+  bootstrap="./grpc-gcp-bootstrap.php"
+  colors="true">
+  <testsuites>
+    <testsuite>
+      <directory>./tests/grpc-gcp</directory>
+    </testsuite>
+  </testsuites>
+  <filter>
+    <whitelist>
+      <directory suffix=".php">*/src</directory>
+      <directory suffix=".php">src</directory>
+      <exclude>
+        <directory suffix=".php">*/fpm/*</directory>
+      </exclude>
+    </whitelist>
+  </filter>
+  <php>
+    <ini name="memory_limit" value="2048M"/>
+  </php>
+</phpunit>

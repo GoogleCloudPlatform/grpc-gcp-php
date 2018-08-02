@@ -16,12 +16,6 @@
  * limitations under the License.
  *
  */
-session_start();
-header('Content-type: text/plain');
-
-require_once(__DIR__ . '/vendor/autoload.php');
-require_once(__DIR__ . '/../vendor/autoload.php');
-
 use Google\Cloud\Spanner\V1\SpannerGrpcClient;
 use Google\Cloud\Spanner\V1\CreateSessionRequest;
 use Google\Cloud\Spanner\V1\DeleteSessionRequest;
@@ -29,7 +23,7 @@ use Google\Auth\ApplicationDefaultCredentials;
 use Google\Cloud\Spanner\V1\ExecuteSqlRequest;
 use Google\Cloud\Spanner\V1\ListSessionsRequest;
 
-class CallCredentialsTest extends PHPUnit_Framework_TestCase
+class BasicTest extends PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
@@ -38,24 +32,22 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
 
     public function tearDown()
     {
-        $_SESSION = array();
     }
 
 
     public function createStub($max_channels = 10, $max_streams = 1)
     {
-        putenv("GOOGLE_APPLICATION_CREDENTIALS=./grpc-gcp.json");
         $this->_DEFAULT_MAX_CHANNELS_PER_TARGET = $max_channels;
         $this->_WATER_MARK = $max_streams;
         $hostname = 'spanner.googleapis.com';
+        $string = file_get_contents(__DIR__ . "/spanner.grpc.config");
+
         $conf = new \Grpc\Gcp\ApiConfig();
+        $conf->mergeFromJsonString($string);
         $channel_pool = $conf->getChannelPool();
-        if ($channel_pool == null) {
-            $channel_pool = new \Grpc\Gcp\ChannelPoolConfig();
-            $conf->setChannelPool($channel_pool);
-        }
         $channel_pool->setMaxConcurrentStreamsLowWatermark($max_streams);
-        $config = new \Google\Cloud\Grpc\Config($hostname, $conf);
+
+        $config = new \Grpc\Gcp\Config($hostname, $conf);
         $credentials = \Grpc\ChannelCredentials::createSsl();
         $auth = ApplicationDefaultCredentials::getCredentials();
         $opts = [
@@ -88,7 +80,6 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
             $create_session_request = new CreateSessionRequest();
             $create_session_request->setDatabase($this->database);
             $create_session_call = $this->stub->CreateSession($create_session_request);
-            $this->assertEquals(1, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
             list($session, $status) = $create_session_call->wait();
             $this->assertStatusOk($status);
             $delete_session_request = new DeleteSessionRequest();
@@ -97,7 +88,6 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
             $this->assertStatusOk($status);
             $result = (count($this->call_invoker->getChannel()->getChannelRefs()) == 1);
             $this->assertEquals(1, count($this->call_invoker->getChannel()->getChannelRefs()));
-            $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
         }
     }
 
@@ -106,33 +96,43 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
     {
         $this->createStub();
         $rpc_calls = array();
-        // All RPCs are sent by the first channel created. Because the numbers of streams
-        // are less than 100.
         for ($i = 0; $i < $this->_DEFAULT_MAX_CHANNELS_PER_TARGET; $i++) {
             $create_session_request = new CreateSessionRequest();
             $create_session_request->setDatabase($this->database);
             $create_session_call = $this->stub->CreateSession($create_session_request);
-            $this->assertEquals(1, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
+            $result = (count($this->call_invoker->getChannel()->getChannelRefs()) == $i + 1);
             $this->assertEquals($i + 1, count($this->call_invoker->getChannel()->getChannelRefs()));
             array_push($rpc_calls, $create_session_call);
         }
-        $sessions = array();
         for ($i = 0; $i < $this->_DEFAULT_MAX_CHANNELS_PER_TARGET; $i++) {
             list($session, $status) = $rpc_calls[$i]->wait();
-            array_push($sessions, $session);
             $this->assertStatusOk($status);
-        }
-        for ($i = 0; $i < $this->_DEFAULT_MAX_CHANNELS_PER_TARGET; $i++) {
-            $result = $this->call_invoker->getChannel()->getChannelRefs()[$i]->getActiveStreamRef();
-        }
-        for ($i = 0; $i < $this->_DEFAULT_MAX_CHANNELS_PER_TARGET; $i++) {
             $delete_session_request = new DeleteSessionRequest();
-            $delete_session_request->setName($sessions[$i]->getName());
+            $delete_session_request->setName($session->getName());
             $delete_session_call = $this->stub->DeleteSession($delete_session_request);
             list($session, $status) = $delete_session_call->wait();
             $this->assertStatusOk($status);
-            $result = $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef();
-            $this->assertEquals(0, $result);
+            $result = (count($this->call_invoker->getChannel()->getChannelRefs()) == $this->_DEFAULT_MAX_CHANNELS_PER_TARGET);
+            $this->assertEquals($this->_DEFAULT_MAX_CHANNELS_PER_TARGET,
+                count($this->call_invoker->getChannel()->getChannelRefs()));
+        }
+
+        $rpc_calls = array();
+        for ($i = 0; $i < $this->_DEFAULT_MAX_CHANNELS_PER_TARGET; $i++) {
+            $create_session_request = new CreateSessionRequest();
+            $create_session_request->setDatabase($this->database);
+            $create_session_call = $this->stub->CreateSession($create_session_request);
+            $result = (count($this->call_invoker->getChannel()->getChannelRefs()) == $this->_DEFAULT_MAX_CHANNELS_PER_TARGET);
+            $this->assertEquals($this->_DEFAULT_MAX_CHANNELS_PER_TARGET,
+                count($this->call_invoker->getChannel()->getChannelRefs()));
+            array_push($rpc_calls, $create_session_call);
+        }
+        for ($i = 0; $i < $this->_DEFAULT_MAX_CHANNELS_PER_TARGET; $i++) {
+            list($session, $status) = $rpc_calls[$i]->wait();
+            $delete_session_request = new DeleteSessionRequest();
+            $delete_session_request->setName($session->getName());
+            list($session, $status) = $this->stub->DeleteSession($delete_session_request)->wait();
+            $this->assertStatusOk($status);
         }
     }
 
@@ -146,7 +146,7 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
         list($session, $status) = $create_session_call->wait();
         $this->assertStatusOk($status);
         $this->assertEquals(1, count($this->call_invoker->getChannel()->getChannelRefs()));
-        $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
+        $this->assertEquals(1, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
         $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
 
         $list_session_request = new ListSessionsRequest();
@@ -159,7 +159,7 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
         //  echo "name - ". $session->getName(). PHP_EOL;
         //}
         $this->assertEquals(1, count($this->call_invoker->getChannel()->getChannelRefs()));
-        $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
+        $this->assertEquals(1, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
         $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
 
         $delete_session_request = new DeleteSessionRequest();
@@ -180,7 +180,6 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
     }
 
-
     // Test Execute Sql
     public function testExecuteSql()
     {
@@ -190,7 +189,7 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
         $create_session_call = $this->stub->CreateSession($create_session_request);
         list($session, $status) = $create_session_call->wait();
         $this->assertEquals(1, count($this->call_invoker->getChannel()->getChannelRefs()));
-        $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
+        $this->assertEquals(1, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
         $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
 
         $sql_cmd = "select id from $this->table";
@@ -201,7 +200,7 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
         list($exec_sql_reply, $status) = $exec_sql_call->wait();
         $this->assertStatusOk($status);
         $this->assertEquals(1, count($this->call_invoker->getChannel()->getChannelRefs()));
-        $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
+        $this->assertEquals(1, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
         $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
         $result = ['payload'];
         $i = 0;
@@ -222,7 +221,6 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
     }
 
-
     // Test Execute Streaming Sql
     public function testExecuteStreamingSql()
     {
@@ -232,7 +230,7 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
         $create_session_call = $this->stub->CreateSession($create_session_request);
         list($session, $status) = $create_session_call->wait();
         $this->assertEquals(1, count($this->call_invoker->getChannel()->getChannelRefs()));
-        $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
+        $this->assertEquals(1, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
         $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
 
         $sql_cmd = "select id from $this->table";
@@ -268,7 +266,7 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
             list($session, $status) = $create_session_call->wait();
             $this->assertStatusOk($status);
             $this->assertEquals(1, count($this->call_invoker->getChannel()->getChannelRefs()));
-            $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
+            $this->assertEquals($i + 1, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
             $this->assertEquals($i, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
 
             $exec_sql_request = new ExecuteSqlRequest();
@@ -278,7 +276,7 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
             array_push($exec_sql_calls, $exec_sql_call);
             array_push($sessions, $session);
             $this->assertEquals(1, count($this->call_invoker->getChannel()->getChannelRefs()));
-            $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
+            $this->assertEquals($i + 1, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
             $this->assertEquals($i + 1, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
         }
 
@@ -288,9 +286,9 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
         list($session, $status) = $create_session_call->wait();
         $this->assertStatusOk($status);
         $this->assertEquals(2, count($this->call_invoker->getChannel()->getChannelRefs()));
-        $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[1]->getAffinityRef());
+        $this->assertEquals(2, $this->call_invoker->getChannel()->getChannelRefs()[1]->getAffinityRef());
         $this->assertEquals(2, $this->call_invoker->getChannel()->getChannelRefs()[1]->getActiveStreamRef());
-        $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
+        $this->assertEquals(1, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
         $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
 
         // The new request uses the new session id.
@@ -299,9 +297,9 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
         $exec_sql_request->setSql($sql_cmd);
         $exec_sql_call = $this->stub->ExecuteSql($exec_sql_request);
         $this->assertEquals(2, count($this->call_invoker->getChannel()->getChannelRefs()));
-        $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[1]->getAffinityRef());
+        $this->assertEquals(2, $this->call_invoker->getChannel()->getChannelRefs()[1]->getAffinityRef());
         $this->assertEquals(2, $this->call_invoker->getChannel()->getChannelRefs()[1]->getActiveStreamRef());
-        $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
+        $this->assertEquals(1, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
         $this->assertEquals(1, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
 
         // Clear session and stream
@@ -309,9 +307,9 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
         $this->assertStatusOk($status);
         $this->assertEquals($exec_sql_reply->getRows()[0]->getValues()[0]->getStringValue(), $result[0]);
         $this->assertEquals(2, count($this->call_invoker->getChannel()->getChannelRefs()));
-        $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[1]->getAffinityRef());
+        $this->assertEquals(2, $this->call_invoker->getChannel()->getChannelRefs()[1]->getAffinityRef());
         $this->assertEquals(2, $this->call_invoker->getChannel()->getChannelRefs()[1]->getActiveStreamRef());
-        $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
+        $this->assertEquals(1, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
         $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
 
         $delete_session_request = new DeleteSessionRequest();
@@ -319,7 +317,7 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
         list($session, $status) = $this->stub->DeleteSession($delete_session_request)->wait();
         $this->assertStatusOk($status);
         $this->assertEquals(2, count($this->call_invoker->getChannel()->getChannelRefs()));
-        $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[1]->getAffinityRef());
+        $this->assertEquals(2, $this->call_invoker->getChannel()->getChannelRefs()[1]->getAffinityRef());
         $this->assertEquals(2, $this->call_invoker->getChannel()->getChannelRefs()[1]->getActiveStreamRef());
         $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
         $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
@@ -329,7 +327,7 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
             $this->assertStatusOk($status);
             $this->assertEquals($exec_sql_reply->getRows()[0]->getValues()[0]->getStringValue(), $result[0]);
             $this->assertEquals(2, count($this->call_invoker->getChannel()->getChannelRefs()));
-            $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[1]->getAffinityRef());
+            $this->assertEquals(2 - $i, $this->call_invoker->getChannel()->getChannelRefs()[1]->getAffinityRef());
             $this->assertEquals(1 - $i, $this->call_invoker->getChannel()->getChannelRefs()[1]->getActiveStreamRef());
             $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
             $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
@@ -338,7 +336,7 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
             $delete_session_request->setName($sessions[$i]->getName());
             list($session, $status) = $this->stub->DeleteSession($delete_session_request)->wait();
             $this->assertEquals(2, count($this->call_invoker->getChannel()->getChannelRefs()));
-            $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[1]->getAffinityRef());
+            $this->assertEquals(1 - $i, $this->call_invoker->getChannel()->getChannelRefs()[1]->getAffinityRef());
             $this->assertEquals(1 - $i, $this->call_invoker->getChannel()->getChannelRefs()[1]->getActiveStreamRef());
             $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
             $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
@@ -355,14 +353,13 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
         $sessions = array();
         $responses_result = array();
         for ($i=0; $i < $this->_WATER_MARK; $i++) {
-            echo "$i ";
             $create_session_request = new CreateSessionRequest();
             $create_session_request->setDatabase($this->database);
             $create_session_call = $this->stub->CreateSession($create_session_request);
             list($session, $status) = $create_session_call->wait();
             $this->assertStatusOk($status);
             $this->assertEquals(1, count($this->call_invoker->getChannel()->getChannelRefs()));
-            $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
+            $this->assertEquals($i + 1, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
             $this->assertEquals($i, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
 
             $exec_sql_request = new ExecuteSqlRequest();
@@ -374,11 +371,9 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
             array_push($exec_sql_calls, $exec_sql_call);
             array_push($sessions, $session);
             $this->assertEquals(1, count($this->call_invoker->getChannel()->getChannelRefs()));
-            $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
+            $this->assertEquals($i + 1, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
             $this->assertEquals($i + 1, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
         }
-
-        print_r($this->call_invoker->getChannel()->getChannelRefs());
         $create_session_request = new CreateSessionRequest();
         $create_session_request->setDatabase($this->database);
         $create_session_call = $this->stub->CreateSession($create_session_request);
@@ -386,9 +381,9 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
         $this->assertStatusOk($status);
 
         $this->assertEquals(2, count($this->call_invoker->getChannel()->getChannelRefs()));
-        $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[1]->getAffinityRef());
+        $this->assertEquals(100, $this->call_invoker->getChannel()->getChannelRefs()[1]->getAffinityRef());
         $this->assertEquals(100, $this->call_invoker->getChannel()->getChannelRefs()[1]->getActiveStreamRef());
-        $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
+        $this->assertEquals(1, $this->call_invoker->getChannel()->getChannelRefs()[0]->getAffinityRef());
         $this->assertEquals(0, $this->call_invoker->getChannel()->getChannelRefs()[0]->getActiveStreamRef());
 
         // The new request uses the new session id.

@@ -1,6 +1,0 @@
-{
-    "require": {
-        "google/cloud": "*",
-        "google/grpc-gcp": "*"
-    }
-}

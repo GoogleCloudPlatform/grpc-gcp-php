@@ -16,9 +16,6 @@
  * limitations under the License.
  *
  */
-
-require_once(__DIR__ . '/vendor/autoload.php');
-
 use Google\Cloud\Spanner\V1\SpannerGrpcClient;
 use Google\Cloud\Spanner\V1\CreateSessionRequest;
 use Google\Auth\ApplicationDefaultCredentials;
@@ -32,7 +29,6 @@ class ReproduceTest extends PHPUnit_Framework_TestCase
         $this->_DEFAULT_MAX_CHANNELS_PER_TARGET = 10;
         $this->_WATER_MARK = 100;
         $this->database = 'projects/grpc-gcp/instances/sample/databases/benchmark';
-        putenv("GOOGLE_APPLICATION_CREDENTIALS=./grpc-gcp.json");
     }
 
 
@@ -51,7 +47,7 @@ class ReproduceTest extends PHPUnit_Framework_TestCase
             'update_metadata' => $auth->getUpdateMetadataFunc(),
         ];
         if ($enable_gcp) {
-            $string = file_get_contents("spanner.grpc.config");
+            $string = file_get_contents(__DIR__ . "/spanner.grpc.config");
             $conf = new \Grpc\Gcp\ApiConfig();
             $conf->mergeFromJsonString($string);
             $channel_pool = $conf->getChannelPool();

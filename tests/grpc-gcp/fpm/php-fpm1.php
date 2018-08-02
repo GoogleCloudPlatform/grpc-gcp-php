@@ -1,10 +1,9 @@
 <?php
 
 header('Content-type: text/plain');
-putenv("GOOGLE_APPLICATION_CREDENTIALS=./../grpc-gcp.json");
+putenv("GOOGLE_APPLICATION_CREDENTIALS=./grpc-gcp.json");
 
-require_once(__DIR__ . '/../vendor/autoload.php');
-require_once(__DIR__ . '/../../vendor/autoload.php');
+require_once(__DIR__ . '/../../../vendor/autoload.php');
 
 use Google\Cloud\Spanner\V1\SpannerGrpcClient;
 use Google\Cloud\Spanner\V1\CreateSessionRequest;
@@ -17,12 +16,11 @@ $_WATER_MARK = 2;
 $hostname = 'spanner.googleapis.com';
 $string = file_get_contents("../spanner.grpc.config");
 
-
 $conf = new \Grpc\Gcp\ApiConfig();
 $conf->mergeFromJsonString($string);
 $channel_pool = $conf->getChannelPool();
 $channel_pool->setMaxConcurrentStreamsLowWatermark($_WATER_MARK);
-$config = new \Google\Cloud\Grpc\Config($hostname, $conf);
+$config = new \Grpc\Gcp\Config($hostname, $conf);
 
 $credentials = \Grpc\ChannelCredentials::createSsl();
 $auth = ApplicationDefaultCredentials::getCredentials();
