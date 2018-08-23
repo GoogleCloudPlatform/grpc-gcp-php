@@ -33,6 +33,7 @@ class Config
      * @param \Grpc\Gcp\ApiConfig   $conf
      * @param CacheItemPoolInterface $cacheItemPool A pool for storing configuration and channels
      *                                            cross requests within a single worker process.
+     * @throws \RuntimeException When a failure occurs while attempting to attach to shared memory.
      */
     public function __construct($target, $conf = null, CacheItemPoolInterface $cacheItemPool = null)
     {
@@ -73,7 +74,6 @@ class Config
                 }
                 shm_detach($shm_id);
             }, $gcp_call_invoker, $channel_pool_key, $shm_id);
-
         } else {
             $item = $cacheItemPool->getItem($channel_pool_key);
             if ($item->isHit()) {
@@ -130,7 +130,8 @@ class Config
         return $affinity_conf;
     }
 
-    private function get_shmem() {
+    private function get_shmem()
+    {
         $shmid = shm_attach(getmypid(), 200000, 0600);
         if ($shmid === false) {
             throw new \RuntimeException(
