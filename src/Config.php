@@ -29,12 +29,12 @@ class Config
     private $gcp_call_invoker;
 
     /**
-     * @param string  $hostname Which API we want to manage the connection.
+     * @param string  $target The target API we want to manage the connection.
      * @param \Grpc\Gcp\ApiConfig   $conf
      * @param CacheItemPoolInterface $cacheItemPool A pool for storing configuration and channels
      *                                            cross requests within a single worker process.
      */
-    public function __construct($hostname, $conf = null, CacheItemPoolInterface $cacheItemPool = null)
+    public function __construct($target, $conf = null, CacheItemPoolInterface $cacheItemPool = null)
     {
         if ($conf == null) {
             // If there is no configure file, use the default gRPC channel.
@@ -42,8 +42,10 @@ class Config
             return;
         }
         $gcp_channel = null;
-        $this->hostname = $hostname;
-        $channel_pool_key = $hostname . 'gcp_channel' . getmypid();
+        $url_host = parse_url($target, PHP_URL_HOST);
+        $this->hostname = $url_host ? $url_host : $target;
+        $channel_pool_key = $this->hostname . '.gcp.channel.' . getmypid();
+
         if (!$cacheItemPool) {
             // If there is no cacheItemPool, use shared memory for
             // caching the configuration and channel pool.
@@ -52,22 +54,26 @@ class Config
                 'sysvshm extension is required to use this ItemPool');
             }
             $channel_pool_key = intval(base_convert(sha1($channel_pool_key), 16, 10));
-            $shm_id = shm_attach(getmypid(), 200000, 0600);
-            $var1 = @shm_get_var($shm_id, $channel_pool_key);
-            if ($var1) {
-                $gcp_call_invoker = unserialize($var1);
+            $shm_id = $this->get_shmem();
+            if (shm_has_var($shm_id, $channel_pool_key)) {
+                $shm_var = shm_get_var($shm_id, $channel_pool_key);
+                $gcp_call_invoker = unserialize($shm_var);
             } else {
                 $affinity_conf = $this->parseConfObject($conf);
                 $gcp_call_invoker = new GCPCallInvoker($affinity_conf);
             }
             $this->gcp_call_invoker = $gcp_call_invoker;
+            shm_detach($shm_id);
 
             register_shutdown_function(function ($gcp_call_invoker, $channel_pool_key, $shm_id) {
                 // Push the current gcp_channel back into the pool when the script finishes.
+                $shm_id = $this->get_shmem();
                 if (!shm_put_var($shm_id, $channel_pool_key, serialize($gcp_call_invoker))) {
                     echo "[warning]: failed to update the item pool\n";
                 }
+                shm_detach($shm_id);
             }, $gcp_call_invoker, $channel_pool_key, $shm_id);
+
         } else {
             $item = $cacheItemPool->getItem($channel_pool_key);
             if ($item->isHit()) {
@@ -122,5 +128,15 @@ class Config
         }
         $affinity_conf['affinity_by_method'] = $aff_by_method;
         return $affinity_conf;
+    }
+
+    private function get_shmem() {
+        $shmid = shm_attach(getmypid(), 200000, 0600);
+        if ($shmid === false) {
+            throw new \RuntimeException(
+                'Failed to attach to the shared memory'
+            );
+        }
+        return $shmid;
     }
 }
