@@ -51,8 +51,9 @@ class Config
             // If there is no cacheItemPool, use shared memory for
             // caching the configuration and channel pool.
             if (! extension_loaded('sysvshm')) {
-                throw \RuntimeException(
-                'sysvshm extension is required to use this ItemPool');
+                error_log('sysvshm extension is required to use this ItemPool');
+                $this->gcp_call_invoker = new \Grpc\DefaultCallInvoker();
+                return;
             }
             $channel_pool_key = intval(base_convert(sha1($channel_pool_key), 16, 10));
             $shm_id = $this->get_shmem();
