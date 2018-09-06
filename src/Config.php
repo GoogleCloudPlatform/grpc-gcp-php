@@ -27,6 +27,7 @@ class Config
 {
     private $hostname;
     private $gcp_call_invoker;
+    private $cross_script_shmem_enabled;
     private $supported_sapis = ['fpm-fcgi', 'cli-server'];
 
     /**
@@ -43,10 +44,13 @@ class Config
             $this->gcp_call_invoker = new \Grpc\DefaultCallInvoker();
             return;
         }
+
         $gcp_channel = null;
         $url_host = parse_url($target, PHP_URL_HOST);
         $this->hostname = $url_host ? $url_host : $target;
         $channel_pool_key = $this->hostname . '.gcp.channel.' . getmypid();
+
+        $this->cross_script_shmem_enabled = $this->crossScriptShmemEnabled();
 
         if (!$cacheItemPool) {
             // If there is no cacheItemPool, use shared memory for
@@ -69,7 +73,7 @@ class Config
 
             register_shutdown_function(function ($gcp_call_invoker, $channel_pool_key, $shm_id) {
                 $shm_id = $this->getShmem();
-                if (! $this->crossScriptShmemEnabled()) {
+                if (! $this->cross_script_shmem_enabled) {
                     // Clean up memory if cross-script shared memory is not needed.
                     shm_remove($shm_id);
                 } else {
@@ -138,7 +142,11 @@ class Config
 
     private function crossScriptShmemEnabled()
     {
-        return in_array(php_sapi_name(), $this->supported_sapis) || getenv('FORCE_ENABLE_CROSS_SCRIPT_SHMEM');
+        $force_enable_gcp = filter_var(
+            getenv('ENABLE_GCP_CHANNEL_MANAGEMENT'),
+            FILTER_VALIDATE_BOOLEAN
+        );
+        return in_array(php_sapi_name(), $this->supported_sapis) || $force_enable_gcp;
     }
 
     private function getShmem()
