@@ -27,6 +27,7 @@ class Config
 {
     private $hostname;
     private $gcp_call_invoker;
+    private $supported_sapis = ['fpm-fcgi', 'cli-server'];
 
     /**
      * @param string  $target The target API we want to manage the connection.
@@ -55,7 +56,7 @@ class Config
                 'sysvshm extension is required to use this ItemPool');
             }
             $channel_pool_key = intval(base_convert(sha1($channel_pool_key), 16, 10));
-            $shm_id = $this->get_shmem();
+            $shm_id = $this->getShmem();
             if (shm_has_var($shm_id, $channel_pool_key)) {
                 $shm_var = shm_get_var($shm_id, $channel_pool_key);
                 $gcp_call_invoker = unserialize($shm_var);
@@ -67,10 +68,15 @@ class Config
             shm_detach($shm_id);
 
             register_shutdown_function(function ($gcp_call_invoker, $channel_pool_key, $shm_id) {
-                // Push the current gcp_channel back into the pool when the script finishes.
-                $shm_id = $this->get_shmem();
-                if (!shm_put_var($shm_id, $channel_pool_key, serialize($gcp_call_invoker))) {
-                    echo "[warning]: failed to update the item pool\n";
+                $shm_id = $this->getShmem();
+                if (! $this->crossScriptShmemEnabled()) {
+                    // Clean up memory if cross-script shared memory is not needed.
+                    shm_remove($shm_id);
+                } else {
+                    // Push the current gcp_channel back into the pool when the script finishes.
+                    if (!shm_put_var($shm_id, $channel_pool_key, serialize($gcp_call_invoker))) {
+                        echo "[warning]: failed to update the item pool\n";
+                    }
                 }
                 shm_detach($shm_id);
             }, $gcp_call_invoker, $channel_pool_key, $shm_id);
@@ -130,7 +136,12 @@ class Config
         return $affinity_conf;
     }
 
-    private function get_shmem()
+    private function crossScriptShmemEnabled()
+    {
+        return in_array(php_sapi_name(), $this->supported_sapis) || getenv('FORCE_ENABLE_CROSS_SCRIPT_SHMEM');
+    }
+
+    private function getShmem()
     {
         $shmid = shm_attach(getmypid(), 200000, 0600);
         if ($shmid === false) {
