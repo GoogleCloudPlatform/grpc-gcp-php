@@ -238,7 +238,7 @@ function partition($client, $metrics){
 
 	$txn_options = new Google\Cloud\Spanner\V1\TransactionOptions();
 	$ro = new Google\Cloud\Spanner\V1\TransactionOptions\ReadOnly();
-	$txn_options->setReadWrite($ro);
+	$txn_options->setReadOnly($ro);
 	$txn_selector = new Google\Cloud\Spanner\V1\TransactionSelector();
 	$txn_selector->setBegin($txn_options);
 
