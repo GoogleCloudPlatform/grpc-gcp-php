@@ -17,7 +17,7 @@ use Google\Auth\ApplicationDefaultCredentials;
 use Google\Cloud\Firestore\V1beta1\FirestoreClient;
 use Google\Cloud\Spanner\V1\SpannerClient;
 
-putenv('GOOGLE_APPLICATION_CREDENTIALS=../cloudprober-test-312fec66d8c5.json');
+putenv('GOOGLE_APPLICATION_CREDENTIALS=../../../../cloudprober-test-312fec66d8c5.json');
 
 function getArgs(){
 	$options = getopt('',['api:','extension:']);
@@ -54,12 +54,10 @@ function executeProbes($api){
 	];
 
 	if($api == 'spanner'){
-		//$channel = getStubChannel($_SPANNER_TARGET, False);
 		$client = new SpannerClient($_SPANNER_TARGET, $opts);
 		$probe_functions = $spanner_probes;
 	}
 	else if($api == 'firestore'){
-		//$channel = getStubChannel($_FIRESTORE_TARGET);
 		$client = new FirestoreClient($_FIRESTORE_TARGET, $opts);
 		$probe_functions = $firestore_probes;
 	}

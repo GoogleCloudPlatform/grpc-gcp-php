@@ -3,9 +3,10 @@
 #TODO
 require('../Google/Cloud/Firestore/V1beta1/ListDocumentsRequest.php');
 
-$_PARENT_RESOURCE = 'projects/grpc-prober-testing/databases/(default)/documents';
+$_PARENT_RESOURCE = 'projects/cloudprober-testing/databases/(default)/documents';
 
 function document($client, $metrics){
+	global $_PARENT_RESOURCE;
 	
 	$list_document_request = new Google\Cloud\Firestore\V1beta1\ListDocumentsRequest();
 	$list_document_request->setParent($_PARENT_RESOURCE);
