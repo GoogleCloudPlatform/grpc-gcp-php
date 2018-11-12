@@ -86,6 +86,7 @@ function executeProbes($api){
 
 	if($success != $total){
 		# TODO: exit system
+		exit(1);
 	}
 
 }

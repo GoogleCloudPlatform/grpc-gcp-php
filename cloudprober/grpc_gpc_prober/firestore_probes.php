@@ -1,9 +1,16 @@
 <?php
 
-#TODO
 require('../Google/Cloud/Firestore/V1beta1/ListDocumentsRequest.php');
 
 $_PARENT_RESOURCE = 'projects/cloudprober-testing/databases/(default)/documents';
+
+/*
+Probes to test ListDocuments grpc call from Firestore stub.
+
+  Args:
+    stub: An object of FirestoreStub.
+    metrics: A dict of metrics.
+*/
 
 function document($client, $metrics){
 	global $_PARENT_RESOURCE;

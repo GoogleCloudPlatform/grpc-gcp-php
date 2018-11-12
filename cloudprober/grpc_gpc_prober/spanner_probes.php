@@ -42,6 +42,18 @@ function microtime_float()
     return ((float)$usec + (float)$sec);
 }
 
+/*
+Probes to test session related grpc call from Spanner stub.
+
+  Includes tests against CreateSession, GetSession, ListSessions, and
+  DeleteSession of Spanner stub.
+
+  Args:
+    stub: An object of SpannerStub.
+    metrics: A list of metrics.
+
+*/
+
 function sessionManagement($client, $metrics){
 	global $_DATABASE;
 
@@ -58,8 +70,6 @@ function sessionManagement($client, $metrics){
 	$lantency =  (microtime_float()- $time_start) * 1000;
 	$metrics['create_session_latency_ms'] = $lantency;
 
-	// TODO: Error Check for Create
-
 	#Get Session
 	$getSessionRequest = new Google\Cloud\Spanner\V1\GetSessionRequest();
 	$getSessionRequest->setName($session->getName());
@@ -69,8 +79,6 @@ function sessionManagement($client, $metrics){
 	$lantency =  (microtime_float() - $time_start) * 1000;
 	$metrics['get_session_latency_ms'] = $lantency;
 
-	// TODO: Error Check for Get
-
 	#List session
 	$listSessionsRequest = new Google\Cloud\Spanner\V1\ListSessionsRequest();
 	$listSessionsRequest->setDatabase($_DATABASE);
@@ -78,8 +86,6 @@ function sessionManagement($client, $metrics){
 	$response = $client->ListSessions($listSessionsRequest);
 	$lantency =  (microtime_float() - $time_start) * 1000;
 	$metrics['list_sessions_latency_ms'] = $lantency;
-
-	// TODO: Error Check for List
 
 	#Delete session
 	$deleteSessionRequest = new Google\Cloud\Spanner\V1\DeleteSessionRequest();
@@ -89,8 +95,16 @@ function sessionManagement($client, $metrics){
 	$lantency =  (microtime_float() - $time_start) * 1000;
 	$metrics['delete_session_latency_ms'] = $lantency;
 
-	// TODO: Error Check for Delete
 }
+
+/*
+Probes to test ExecuteSql and ExecuteStreamingSql call from Spanner stub.
+
+  Args:
+    stub: An object of SpannerStub.
+    metrics: A list of metrics.
+
+*/
 
 function executeSql($client, $metrics){
 	global $_DATABASE;
@@ -128,6 +142,13 @@ function executeSql($client, $metrics){
 	$client->deleteSession($deleteSessionRequest);
 }
 
+/*
+Probe to test Read and StreamingRead grpc call from Spanner stub.
+
+  Args:
+    stub: An object of SpannerStub.
+    metrics: A list of metrics.
+*/
 
 function read($client, $metrics){
 	global $_DATABASE;
@@ -168,6 +189,13 @@ function read($client, $metrics){
 	$client->deleteSession($deleteSessionRequest);
 }
 
+/*
+Probe to test BeginTransaction, Commit and Rollback grpc from Spanner stub.
+
+  Args:
+    stub: An object of SpannerStub.
+    metrics: A list of metrics.
+*/
 
 function transaction($client, $metrics){
 	global $_DATABASE;
@@ -224,6 +252,13 @@ function transaction($client, $metrics){
 	$client->deleteSession($deleteSessionRequest); 
 }
 
+/*
+Probe to test PartitionQuery and PartitionRead grpc call from Spanner stub.
+
+  Args:
+    stub: An object of SpannerStub.
+    metrics: A list of metrics.
+*/
 
 function partition($client, $metrics){
 	global $_DATABASE;
