@@ -257,10 +257,10 @@ function partition($client, $metrics){
 	$ptn_read_request = new Google\Cloud\Spanner\V1\PartitionReadRequest();
 	$ptn_read_request->setSession($session->getName());
 	$ptn_read_request->setTable('users');
-	$ptn_read_request->setTansaction($txn_selector);
+	$ptn_read_request->setTransaction($txn_selector);
 	$keyset = new Google\Cloud\Spanner\V1\KeySet();
 	$keyset->setAll(True);
-	$ptn_read_request->setKey_set($keyset);
+	$ptn_read_request->setKeySet($keyset);
 	$ptn_read_request->setColumns(['username', 'firstname', 'lastname']);
 
 	$time_start = microtime_float();
@@ -279,7 +279,7 @@ $PROBE_FUNCTIONS = [
 	'execute_sql' => 'executeSql',
 	'read' => 'read',
 	'transaction' => 'transaction',
-	#'partition' => 'partition'
+	'partition' => 'partition'
 ];
 
 return $PROBE_FUNCTIONS;

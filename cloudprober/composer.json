@@ -5,6 +5,6 @@
     "grpc/grpc": "^v1.15.0",
     "google/protobuf": "^v3.3.0",
     "google/auth": "v1.4.0",
-    "google/cloud": "v0.52.1"
+    "google/cloud": "v0.85.0"
   }
 }
