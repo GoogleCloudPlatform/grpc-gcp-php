@@ -1,6 +1,6 @@
 <?php
 
-require('../Google/Cloud/Firestore/V1beta1/ListDocumentsRequest.php');
+require('../vendor/autoload.php');
 
 $_PARENT_RESOURCE = 'projects/cloudprober-testing/databases/(default)/documents';
 

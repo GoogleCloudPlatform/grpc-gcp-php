@@ -1,21 +1,6 @@
 <?php
 
-require('../Google/Cloud/Spanner/V1/CreateSessionRequest.php');
-require('../Google/Cloud/Spanner/V1/GetSessionRequest.php');
-require('../Google/Cloud/Spanner/V1/ListSessionsRequest.php');
-require('../Google/Cloud/Spanner/V1/DeleteSessionRequest.php');
-require('../Google/Cloud/Spanner/V1/ExecuteSqlRequest.php');
-require('../Google/Cloud/Spanner/V1/ReadRequest.php');
-require('../Google/Cloud/Spanner/V1/KeySet.php');
-require('../Google/Cloud/Spanner/V1/TransactionOptions.php');
-require('../Google/Cloud/Spanner/V1/TransactionOptions/ReadWrite.php');
-require('../Google/Cloud/Spanner/V1/TransactionOptions/ReadOnly.php');
-require('../Google/Cloud/Spanner/V1/BeginTransactionRequest.php');
-require('../Google/Cloud/Spanner/V1/CommitRequest.php');
-require('../Google/Cloud/Spanner/V1/RollbackRequest.php');
-require('../Google/Cloud/Spanner/V1/TransactionSelector.php');
-require('../Google/Cloud/Spanner/V1/PartitionQueryRequest.php');
-require('../Google/Cloud/Spanner/V1/PartitionReadRequest.php');
+require('../vendor/autoload.php');
 
 $_DATABASE = 'projects/cloudprober-test/instances/test-instance/databases/test-db';
 $_TEST_USERNAME = 'test_username';

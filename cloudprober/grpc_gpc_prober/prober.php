@@ -17,7 +17,6 @@ use Google\Auth\ApplicationDefaultCredentials;
 use Google\Cloud\Firestore\V1beta1\FirestoreClient;
 use Google\Cloud\Spanner\V1\SpannerClient;
 
-putenv('GOOGLE_APPLICATION_CREDENTIALS=../../../../cloudprober-test-312fec66d8c5.json');
 
 function getArgs(){
 	$options = getopt('',['api:','extension:']);
