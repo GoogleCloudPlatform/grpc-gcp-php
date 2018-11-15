@@ -7,7 +7,7 @@ require_once '../Google/Cloud/Spanner/V1/SpannerClient.php';
 
 $firestore_probes = require './firestore_probes.php';
 $spanner_probes = require './spanner_probes.php';
-$stackdriver_util = require './stackdriver_util.php';
+require './stackdriver_util.php';
 
 $_OAUTH_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
 $_FIRESTORE_TARGET = 'firestore.googleapis.com:443';
@@ -16,6 +16,7 @@ $_SPANNER_TARGET = 'spanner.googleapis.com:443';
 use Google\Auth\ApplicationDefaultCredentials;
 use Google\Cloud\Firestore\V1beta1\FirestoreClient;
 use Google\Cloud\Spanner\V1\SpannerClient;
+
 
 
 function getArgs(){
@@ -62,7 +63,7 @@ function executeProbes($api){
 	}
 	else{
 		echo 'grpc not implemented for '.$api;
-		return;
+		exit(1);
 	}
 
 	$total = sizeof($probe_functions);

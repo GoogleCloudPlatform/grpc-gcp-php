@@ -12,7 +12,7 @@ Probes to test ListDocuments grpc call from Firestore stub.
     metrics: A dict of metrics.
 */
 
-function document($client, $metrics){
+function document($client, &$metrics){
 	global $_PARENT_RESOURCE;
 	
 	$list_document_request = new Google\Cloud\Firestore\V1beta1\ListDocumentsRequest();

@@ -1,17 +1,13 @@
 <?php
 
-//use Google\Cloud\ErrorReporting\V1beta1\ReportErrorsServiceClient;
-//use Google\Cloud\ErrorReporting\V1beta1\ReportedErrorEvent;
-
-#TODO
-//{$ErrorReporting} = require '@google-cloud/error-reporting';
+require('../vendor/autoload.php');
 
 class StackdriverUtil{
 	function __construct($api){
 		$this->api = $api;
 		$this->metrics = [];
 		$this->success = FALSE;
-		//$this->err_client = new ErrorReporting();
+		$this->err_client = new Google\Cloud\ErrorReporting\V1beta1\ReportErrorsServiceClient();
 	}
 
 	function addMetric($key, $value){
@@ -19,7 +15,8 @@ class StackdriverUtil{
 	}
 
 	function addMetrics($metrics){
-		array_merge($this->metrics, $metrics);
+		//array_merge($this->metrics, $metrics);
+		$this->metrics = $metrics;
 	}
 
 	function setSuccess($result){
@@ -28,25 +25,26 @@ class StackdriverUtil{
 
 	function outputMetrics(){
 		if ($this->success){
-			echo $this->api.'_success 1';
+			echo $this->api.'_success 1'."\n";
 		}
 		else{
-			echo $this->api.'_success 0';
+			echo $this->api.'_success 0'."\n";
 		}
-
 		foreach ($this->metrics as $key => $value) {
-			echo $key.' '.$value;
+			echo $key.' '.$value."\n";
 		}
 	}
 
 	function reportError($err){
 		error_log($err);
-		# TODO
-		/*
-		$this->err_client->report(
-		    'NodeProberFailure: gRPC(v=x.x.x) fails on '.$this->api.
-            ' API. Details: '.(string)$err
-		);*/
+		$error_event = new Google\Cloud\ErrorReporting\V1beta1\ReportErrorEvent();
+		$error_event->setMessage('PHPProbeFailure: fails on '.$this->api.' API. Details: '.(string)$err."\n");
+
+		$error_req = new Google\Cloud\ErrorReporting\V1beta1\ReportErrorEventRequest();
+		$error_req->setProjectName('gRPC: '.$this->api);
+		$error_req->setEvent($error_event);
+
+		$this->err_client->ReportErrorEvent($error_req);
 	}
 
 }
