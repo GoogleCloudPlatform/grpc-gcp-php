@@ -20,8 +20,7 @@ class StackdriverUtil{
 	}
 
 	function addMetrics($metrics){
-		//array_merge($this->metrics, $metrics);
-		$this->metrics = $metrics;
+		$this->metrics = array_merge($metrics, $this->metrics);
 	}
 
 	function setSuccess($result){
