@@ -71,8 +71,14 @@ function executeProbes($api){
 	# Execute all probes for given api
 	foreach ($probe_functions as $probe_name => $probe_function) {
 		echo $probe_name."\n";
-		$probe_function($client, $metrics);
-		$success++;
+		try{
+			$probe_function($client, $metrics);
+			$success++;
+		}
+		catch(Exception $e){
+			$util->reportError($e);
+		}
+		
 	}
 
 	if($success == $total){

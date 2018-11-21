@@ -5,6 +5,7 @@ require('../vendor/autoload.php');
 use Google\Cloud\ErrorReporting\V1beta1\ReportErrorsServiceClient;
 use Google\Cloud\ErrorReporting\V1beta1\ErrorContext;
 use Google\Cloud\ErrorReporting\V1beta1\ReportedErrorEvent;
+use Google\Cloud\ErrorReporting\V1beta1\SourceLocation;
 
 class StackdriverUtil{
 	function __construct($api){
@@ -41,9 +42,17 @@ class StackdriverUtil{
 
 	function reportError($err){
 		error_log($err);
-		$project_name = "gRPC_PHP";
+		$projectId = '434076015357';
+		$project_name = $this->err_client->projectName($projectId);
+
+		$location = (new SourceLocation())
+    		->setFunctionName($this->api);
+		$context = (new ErrorContext())
+    		->setReportLocation($location);
+
 		$error_event = new ReportedErrorEvent();
 		$error_event->setMessage('PHPProbeFailure: fails on '.$this->api.' API. Details: '.(string)$err."\n");
+		$error_event->setContext($context);
 
 		$this->err_client->reportErrorEvent($project_name, $error_event);
 	}
