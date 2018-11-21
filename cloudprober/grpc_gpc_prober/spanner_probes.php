@@ -90,7 +90,6 @@ Probes to test ExecuteSql and ExecuteStreamingSql call from Spanner stub.
     metrics: A list of metrics.
 
 */
-
 function executeSql($client, &$metrics){
 	global $_DATABASE;
 

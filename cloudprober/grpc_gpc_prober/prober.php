@@ -78,7 +78,7 @@ function executeProbes($api){
 		catch(Exception $e){
 			$util->reportError($e);
 		}
-		
+
 	}
 
 	if($success == $total){
