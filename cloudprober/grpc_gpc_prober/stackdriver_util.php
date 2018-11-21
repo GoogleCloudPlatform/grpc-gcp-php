@@ -2,12 +2,16 @@
 
 require('../vendor/autoload.php');
 
+use Google\Cloud\ErrorReporting\V1beta1\ReportErrorsServiceClient;
+use Google\Cloud\ErrorReporting\V1beta1\ErrorContext;
+use Google\Cloud\ErrorReporting\V1beta1\ReportedErrorEvent;
+
 class StackdriverUtil{
 	function __construct($api){
 		$this->api = $api;
 		$this->metrics = [];
 		$this->success = FALSE;
-		$this->err_client = new Google\Cloud\ErrorReporting\V1beta1\ReportErrorsServiceClient();
+		$this->err_client = new ReportErrorsServiceClient();
 	}
 
 	function addMetric($key, $value){
@@ -37,14 +41,11 @@ class StackdriverUtil{
 
 	function reportError($err){
 		error_log($err);
-		$error_event = new Google\Cloud\ErrorReporting\V1beta1\ReportErrorEvent();
+		$project_name = "gRPC_PHP";
+		$error_event = new ReportedErrorEvent();
 		$error_event->setMessage('PHPProbeFailure: fails on '.$this->api.' API. Details: '.(string)$err."\n");
 
-		$error_req = new Google\Cloud\ErrorReporting\V1beta1\ReportErrorEventRequest();
-		$error_req->setProjectName('gRPC: '.$this->api);
-		$error_req->setEvent($error_event);
-
-		$this->err_client->ReportErrorEvent($error_req);
+		$this->err_client->reportErrorEvent($project_name, $error_event);
 	}
 
 }

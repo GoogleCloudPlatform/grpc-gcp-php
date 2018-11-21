@@ -17,8 +17,6 @@ use Google\Auth\ApplicationDefaultCredentials;
 use Google\Cloud\Firestore\V1beta1\FirestoreClient;
 use Google\Cloud\Spanner\V1\SpannerClient;
 
-
-
 function getArgs(){
 	$options = getopt('',['api:','extension:']);
 	return $options;
