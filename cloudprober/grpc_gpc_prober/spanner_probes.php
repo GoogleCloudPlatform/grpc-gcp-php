@@ -39,7 +39,7 @@ Probes to test session related grpc call from Spanner stub.
 
 */
 
-function sessionManagement($client, $metrics){
+function sessionManagement($client, &$metrics){
 	global $_DATABASE;
 
 	$createSessionRequest = new Google\Cloud\Spanner\V1\CreateSessionRequest();
@@ -90,8 +90,7 @@ Probes to test ExecuteSql and ExecuteStreamingSql call from Spanner stub.
     metrics: A list of metrics.
 
 */
-
-function executeSql($client, $metrics){
+function executeSql($client, &$metrics){
 	global $_DATABASE;
 
 	$createSessionRequest = new Google\Cloud\Spanner\V1\CreateSessionRequest();
@@ -135,7 +134,7 @@ Probe to test Read and StreamingRead grpc call from Spanner stub.
     metrics: A list of metrics.
 */
 
-function read($client, $metrics){
+function read($client, &$metrics){
 	global $_DATABASE;
 
 	$createSessionRequest = new Google\Cloud\Spanner\V1\CreateSessionRequest();
@@ -182,7 +181,7 @@ Probe to test BeginTransaction, Commit and Rollback grpc from Spanner stub.
     metrics: A list of metrics.
 */
 
-function transaction($client, $metrics){
+function transaction($client, &$metrics){
 	global $_DATABASE;
 
 	$createSessionRequest = new Google\Cloud\Spanner\V1\CreateSessionRequest();
@@ -245,7 +244,7 @@ Probe to test PartitionQuery and PartitionRead grpc call from Spanner stub.
     metrics: A list of metrics.
 */
 
-function partition($client, $metrics){
+function partition($client, &$metrics){
 	global $_DATABASE;
 	global $_TEST_USERNAME;
 
