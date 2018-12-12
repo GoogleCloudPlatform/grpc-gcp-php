@@ -199,23 +199,22 @@ class GcpExtensionChannel
         $shutdown = 0;
         foreach ($this->channel_refs as $channel_ref) {
             $state = $channel_ref->getRealChannel($this->credentials)->getConnectivityState($try_to_connect);
-            print_r($state);
             switch ($state) {
                 case \Grpc\CHANNEL_READY:
                     $ready += 1;
-                    break;
+                    break 2;
                 case \Grpc\CHANNEL_FATAL_FAILURE:
                     $shutdown += 1;
-                    continue;
+                    break;
                 case \Grpc\CHANNEL_CONNECTING:
                     $connecting += 1;
-                    continue;
+                    break;
                 case \Grpc\CHANNEL_TRANSIENT_FAILURE:
                     $transient_failure += 1;
-                    continue;
+                    break;
                 case \Grpc\CHANNEL_IDLE:
                     $idle += 1;
-                    continue;
+                    break;
             }
         }
         if ($ready > 0) {
