@@ -206,16 +206,16 @@ class GcpExtensionChannel
                     break;
                 case \Grpc\CHANNEL_FATAL_FAILURE:
                     $shutdown += 1;
-                    continue;
+                    break;
                 case \Grpc\CHANNEL_CONNECTING:
                     $connecting += 1;
-                    continue;
+                    break;
                 case \Grpc\CHANNEL_TRANSIENT_FAILURE:
                     $transient_failure += 1;
-                    continue;
+                    break;
                 case \Grpc\CHANNEL_IDLE:
                     $idle += 1;
-                    continue;
+                    break;
             }
         }
         if ($ready > 0) {
