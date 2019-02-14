@@ -50,40 +50,10 @@ class Config
         $this->hostname = $url_host ? $url_host : $target;
         $channel_pool_key = $this->hostname . '.gcp.channel.' . getmypid();
 
-        $this->cross_script_shmem_enabled = $this->crossScriptShmemEnabled();
-
         if (!$cacheItemPool) {
-            // If there is no cacheItemPool, use shared memory for
-            // caching the configuration and channel pool.
-            if (! extension_loaded('sysvshm')) {
-                throw \RuntimeException(
-                'sysvshm extension is required to use this ItemPool');
-            }
-            $channel_pool_key = intval(base_convert(sha1($channel_pool_key), 16, 10));
-            $shm_id = $this->getShmem();
-            if (shm_has_var($shm_id, $channel_pool_key)) {
-                $shm_var = shm_get_var($shm_id, $channel_pool_key);
-                $gcp_call_invoker = unserialize($shm_var);
-            } else {
-                $affinity_conf = $this->parseConfObject($conf);
-                $gcp_call_invoker = new GCPCallInvoker($affinity_conf);
-            }
+            $affinity_conf = $this->parseConfObject($conf);
+            $gcp_call_invoker = new GCPCallInvoker($affinity_conf);
             $this->gcp_call_invoker = $gcp_call_invoker;
-            shm_detach($shm_id);
-
-            register_shutdown_function(function ($gcp_call_invoker, $channel_pool_key, $shm_id) {
-                $shm_id = $this->getShmem();
-                if (! $this->cross_script_shmem_enabled) {
-                    // Clean up memory if cross-script shared memory is not needed.
-                    shm_remove($shm_id);
-                } else {
-                    // Push the current gcp_channel back into the pool when the script finishes.
-                    if (!shm_put_var($shm_id, $channel_pool_key, serialize($gcp_call_invoker))) {
-                        echo "[warning]: failed to update the item pool\n";
-                    }
-                }
-                shm_detach($shm_id);
-            }, $gcp_call_invoker, $channel_pool_key, $shm_id);
         } else {
             $item = $cacheItemPool->getItem($channel_pool_key);
             if ($item->isHit()) {
@@ -140,23 +110,4 @@ class Config
         return $affinity_conf;
     }
 
-    private function crossScriptShmemEnabled()
-    {
-        $force_enable_gcp = filter_var(
-            getenv('ENABLE_GCP_CHANNEL_MANAGEMENT'),
-            FILTER_VALIDATE_BOOLEAN
-        );
-        return in_array(php_sapi_name(), $this->supported_sapis) || $force_enable_gcp;
-    }
-
-    private function getShmem()
-    {
-        $shmid = shm_attach(getmypid(), 200000, 0600);
-        if ($shmid === false) {
-            throw new \RuntimeException(
-                'Failed to attach to the shared memory'
-            );
-        }
-        return $shmid;
-    }
 }
