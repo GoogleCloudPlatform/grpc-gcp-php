@@ -1,5 +1,5 @@
 <?php
-
+chdir(dirname(__FILE__));
 require '../vendor/autoload.php';
 
 // require_once '../Google/Cloud/Firestore/V1beta1/FirestoreClient.php';
