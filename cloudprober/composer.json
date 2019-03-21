@@ -10,8 +10,6 @@
   },
   "autoload": {
   	"psr-4": {
-  		"Google\\Cloud\\Spanner\\V1\\": "Google/Cloud/Spanner/V1/",
-  		"Google\\Cloud\\Firestore\\V1beta1\\": "Google/Cloud/Firestore/V1beta1",
   		"Google\\Cloud\\ErrorReporting\\V1beta1\\": "vendor/google/cloud/ErrorReporting/src/V1beta1"
   	}
   }

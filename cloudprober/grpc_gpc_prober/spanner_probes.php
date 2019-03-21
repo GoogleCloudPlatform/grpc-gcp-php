@@ -2,7 +2,7 @@
 
 require('../vendor/autoload.php');
 
-$_DATABASE = 'projects/cloudprober-test/instances/test-instance/databases/test-db';
+$_DATABASE = 'projects/grpc-prober-testing/instances/test-instance/databases/test-db';
 $_TEST_USERNAME = 'test_username';
 
 function hardAssert($value, $error_message)

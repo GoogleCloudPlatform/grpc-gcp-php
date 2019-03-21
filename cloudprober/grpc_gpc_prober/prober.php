@@ -2,8 +2,8 @@
 
 require '../vendor/autoload.php';
 
-require_once '../Google/Cloud/Firestore/V1beta1/FirestoreClient.php';
-require_once '../Google/Cloud/Spanner/V1/SpannerClient.php';
+// require_once '../Google/Cloud/Firestore/V1beta1/FirestoreClient.php';
+// require_once '../Google/Cloud/Spanner/V1/SpannerClient.php';
 
 $firestore_probes = require './firestore_probes.php';
 $spanner_probes = require './spanner_probes.php';
@@ -14,8 +14,8 @@ $_FIRESTORE_TARGET = 'firestore.googleapis.com:443';
 $_SPANNER_TARGET = 'spanner.googleapis.com:443';
 
 use Google\Auth\ApplicationDefaultCredentials;
-use Google\Cloud\Firestore\V1beta1\FirestoreClient;
-use Google\Cloud\Spanner\V1\SpannerClient;
+use Google\Cloud\Firestore\V1beta1\FirestoreGrpcClient;
+use Google\Cloud\Spanner\V1\SpannerGrpcClient;
 
 function getArgs(){
 	$options = getopt('',['api:','extension:']);
@@ -52,11 +52,11 @@ function executeProbes($api){
 	];
 
 	if($api == 'spanner'){
-		$client = new SpannerClient($_SPANNER_TARGET, $opts);
+		$client = new SpannerGrpcClient($_SPANNER_TARGET, $opts);
 		$probe_functions = $spanner_probes;
 	}
 	else if($api == 'firestore'){
-		$client = new FirestoreClient($_FIRESTORE_TARGET, $opts);
+		$client = new FirestoreGrpcClient($_FIRESTORE_TARGET, $opts);
 		$probe_functions = $firestore_probes;
 	}
 	else{
@@ -70,7 +70,6 @@ function executeProbes($api){
 
 	# Execute all probes for given api
 	foreach ($probe_functions as $probe_name => $probe_function) {
-		echo $probe_name."\n";
 		try{
 			$probe_function($client, $metrics);
 			$success++;

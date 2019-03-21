@@ -8,6 +8,6 @@ for p in $(find ../third_party/googleapis/google -type f -name *.proto); do
     --proto_path=../third_party/googleapis \
     --php_out=./ \
     --grpc_out=./ \
-    --plugin=protoc-gen-grpc=./bins/opt/grpc_php_plugin \
+    --plugin=protoc-gen-grpc="$(which grpc_php_plugin)" \
     "$p"
 done

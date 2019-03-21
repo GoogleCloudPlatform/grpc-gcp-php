@@ -2,7 +2,7 @@
 
 require('../vendor/autoload.php');
 
-$_PARENT_RESOURCE = 'projects/cloudprober-testing/databases/(default)/documents';
+$_PARENT_RESOURCE = 'projects/grpc-prober-testing/databases/(default)/documents';
 
 /*
 Probes to test ListDocuments grpc call from Firestore stub.
