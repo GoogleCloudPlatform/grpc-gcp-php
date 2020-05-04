@@ -6,7 +6,7 @@
 		"symfony/console" : "~4.0",
 		"google/auth" : "^1.2",
 		"google/protobuf" : "v3.5.1.1",
- 		"google/grpc-service: "1.0.0"
+ 		"google/grpc-service": "1.0.0"
 	},
 	"autoload" : {
 		"psr-4" : {
