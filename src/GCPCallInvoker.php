@@ -51,7 +51,7 @@ class GCPCallInvoker implements \Grpc\CallInvoker
     {
         if ($this->channel) {
             // $call_invoker object has already created from previews PHP-FPM scripts.
-            // Only need to udpate the $opts including the credentials.
+            // Only need to update the $opts including the credentials.
             $this->channel->updateOpts($opts);
         } else {
             $opts['affinity_conf'] = $this->affinity_conf;
