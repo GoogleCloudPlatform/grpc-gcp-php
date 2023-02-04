@@ -7,6 +7,7 @@ use Google\Cloud\ErrorReporting\V1beta1\ErrorContext;
 use Google\Cloud\ErrorReporting\V1beta1\ReportedErrorEvent;
 use Google\Cloud\ErrorReporting\V1beta1\SourceLocation;
 
+#[\AllowDynamicProperties]
 class StackdriverUtil{
 	function __construct($api){
 		$this->api = $api;
