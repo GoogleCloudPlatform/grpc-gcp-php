@@ -7,8 +7,12 @@ use Google\Cloud\ErrorReporting\V1beta1\ErrorContext;
 use Google\Cloud\ErrorReporting\V1beta1\ReportedErrorEvent;
 use Google\Cloud\ErrorReporting\V1beta1\SourceLocation;
 
-#[\AllowDynamicProperties]
 class StackdriverUtil{
+	protected $api;
+	protected $metrics;
+	protected $success;
+	protected $err_client;
+
 	function __construct($api){
 		$this->api = $api;
 		$this->metrics = [];
