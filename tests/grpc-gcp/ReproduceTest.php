@@ -21,23 +21,18 @@ use Google\Cloud\Spanner\V1\CreateSessionRequest;
 use Google\Auth\ApplicationDefaultCredentials;
 use Google\Cloud\Spanner\V1\ExecuteSqlRequest;
 use Google\Cloud\Spanner\V1\ListSessionsRequest;
+use PHPUnit\Framework\TestCase;
 
-class ReproduceTest extends PHPUnit_Framework_TestCase
+class ReproduceTest extends TestCase
 {
-    public function setUp()
+    public function setUp(): void
     {
         $this->_DEFAULT_MAX_CHANNELS_PER_TARGET = 10;
         $this->_WATER_MARK = 100;
         $this->database = 'projects/grpc-gcp/instances/sample/databases/benchmark';
     }
 
-
-    public function tearDown()
-    {
-    }
-
-
-    public function createStub($enable_gcp = true)
+    public function createGrpcStub($enable_gcp = true)
     {
         $credentials = \Grpc\ChannelCredentials::createSsl();
         $auth = ApplicationDefaultCredentials::getCredentials();
@@ -120,7 +115,7 @@ class ReproduceTest extends PHPUnit_Framework_TestCase
 
     public function testGrpcWithoutGCPSuccessLessThan100Streams()
     {
-        $stub_no_gcp = $this->createStub(false);
+        $stub_no_gcp = $this->createGrpcStub(false);
         $create_session_request = new CreateSessionRequest();
         $create_session_request->setDatabase($this->database);
         $create_session_call = $stub_no_gcp->CreateSession($create_session_request);
@@ -141,7 +136,7 @@ class ReproduceTest extends PHPUnit_Framework_TestCase
 
     public function testGrpcWithoutGCPWillHangMoreThan100Streams()
     {
-        $stub_no_gcp = $this->createStub(false);
+        $stub_no_gcp = $this->createGrpcStub(false);
         $create_session_request = new CreateSessionRequest();
         $create_session_request->setDatabase($this->database);
         $create_session_call = $stub_no_gcp->CreateSession($create_session_request);
@@ -168,7 +163,7 @@ class ReproduceTest extends PHPUnit_Framework_TestCase
 
     public function testGrpcWithGCPSuccessLessThan100Streams()
     {
-        $stub_no_gcp = $this->createStub(true);
+        $stub_no_gcp = $this->createGrpcStub(true);
         $create_session_request = new CreateSessionRequest();
         $create_session_request->setDatabase($this->database);
         $create_session_call = $stub_no_gcp->CreateSession($create_session_request);
@@ -189,7 +184,7 @@ class ReproduceTest extends PHPUnit_Framework_TestCase
 
     public function testGrpcWithGCPSuccessMoreThan100Streams()
     {
-        $stub_no_gcp = $this->createStub(true);
+        $stub_no_gcp = $this->createGrpcStub(true);
         $create_session_request = new CreateSessionRequest();
         $create_session_request->setDatabase($this->database);
         $create_session_call = $stub_no_gcp->CreateSession($create_session_request);
