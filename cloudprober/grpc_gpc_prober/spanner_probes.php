@@ -120,7 +120,7 @@ function executeSql($client, &$metrics){
 	$metrics['execute_streaming_sql_latency_ms'] = $lantency;
 
 	// TODO: Error Check for sreaming sql first result
-	
+
 	$deleteSessionRequest = new Google\Cloud\Spanner\V1\DeleteSessionRequest();
 	$deleteSessionRequest->setName($session->getName());
 	$client->deleteSession($deleteSessionRequest);
@@ -233,7 +233,7 @@ function transaction($client, &$metrics){
 
 	$deleteSessionRequest = new Google\Cloud\Spanner\V1\DeleteSessionRequest();
 	$deleteSessionRequest->setName($session->getName());
-	$client->deleteSession($deleteSessionRequest); 
+	$client->deleteSession($deleteSessionRequest);
 }
 
 /*
@@ -256,7 +256,7 @@ function partition($client, &$metrics){
 	hardAssert($session !== null, 'Call completed with a null response');
 
 	$txn_options = new Google\Cloud\Spanner\V1\TransactionOptions();
-	$ro = new Google\Cloud\Spanner\V1\TransactionOptions\ReadOnly();
+	$ro = new Google\Cloud\Spanner\V1\TransactionOptions\PBReadOnly();
 	$txn_options->setReadOnly($ro);
 	$txn_selector = new Google\Cloud\Spanner\V1\TransactionSelector();
 	$txn_selector->setBegin($txn_options);
@@ -290,7 +290,7 @@ function partition($client, &$metrics){
 	# Delete Session
 	$deleteSessionRequest = new Google\Cloud\Spanner\V1\DeleteSessionRequest();
 	$deleteSessionRequest->setName($session->getName());
-	$client->deleteSession($deleteSessionRequest); 
+	$client->deleteSession($deleteSessionRequest);
 }
 
 $PROBE_FUNCTIONS = [
