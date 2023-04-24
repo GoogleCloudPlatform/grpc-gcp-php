@@ -3,7 +3,7 @@
   colors="true">
   <testsuites>
     <testsuite name="grpc-gcp-tests">
-      <directory>./tests/grpc-gcp</directory>
+      <directory>./tests/grpc-gcp/grpc_unit_test</directory>
     </testsuite>
   </testsuites>
   <filter>
