@@ -19,7 +19,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           tools: pecl
-          extensions: grpc
+          extensions: grpc-1.49.0
       - name: Install composer dependencies
         uses: nick-invision/retry@v1
         with:
