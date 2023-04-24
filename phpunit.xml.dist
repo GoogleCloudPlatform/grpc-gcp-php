@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit
-  bootstrap="./grpc-gcp-bootstrap.php"
   colors="true">
   <testsuites>
-    <testsuite>
-      <directory>./tests/grpc-gcp</directory>
+    <testsuite name="grpc-gcp-tests">
+      <directory>./tests/grpc-gcp/grpc_unit_test</directory>
     </testsuite>
   </testsuites>
   <filter>

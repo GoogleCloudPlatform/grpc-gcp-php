@@ -3,5 +3,4 @@
 /.gitignore export-ignore
 /tests export-ignore
 /cloud-apis export-ignore
-grpc-gcp-bootstrap.php export-ignore
-phpunit-grpc-gcp.xml.dist export-ignore
+phpunit.xml.dist export-ignore

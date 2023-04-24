@@ -22,20 +22,11 @@ use Google\Cloud\Spanner\V1\DeleteSessionRequest;
 use Google\Auth\ApplicationDefaultCredentials;
 use Google\Cloud\Spanner\V1\ExecuteSqlRequest;
 use Google\Cloud\Spanner\V1\ListSessionsRequest;
+use PHPUnit\Framework\TestCase;
 
-class ChannelManagementNoConfigTest extends PHPUnit_Framework_TestCase
+class ChannelManagementNoConfigTest extends TestCase
 {
-    public function setUp()
-    {
-    }
-
-
-    public function tearDown()
-    {
-    }
-
-
-    public function createStub($max_channels = 10, $max_streams = 1)
+    public function createGrpcStub($max_channels = 10, $max_streams = 1)
     {
         $this->_DEFAULT_MAX_CHANNELS_PER_TARGET = $max_channels;
         $this->_WATER_MARK = $max_streams;
@@ -75,7 +66,7 @@ class ChannelManagementNoConfigTest extends PHPUnit_Framework_TestCase
     // Test CreateSession Reuse Channel
     public function testCreateSessionReuseChannel()
     {
-        $this->createStub();
+        $this->createGrpcStub();
         for ($i = 0; $i < $this->_DEFAULT_MAX_CHANNELS_PER_TARGET; $i++) {
             $create_session_request = new CreateSessionRequest();
             $create_session_request->setDatabase($this->database);
@@ -96,7 +87,7 @@ class ChannelManagementNoConfigTest extends PHPUnit_Framework_TestCase
     // Test CreateSession New Channel
     public function testCreateSessionNewChannel()
     {
-        $this->createStub();
+        $this->createGrpcStub();
         $rpc_calls = array();
         // All RPCs are sent by the first channel created. Because the numbers of streams
         // are less than 100.
@@ -131,7 +122,7 @@ class ChannelManagementNoConfigTest extends PHPUnit_Framework_TestCase
     // Test Create List Delete Session
     public function testCreateListDeleteSession()
     {
-        $this->createStub();
+        $this->createGrpcStub();
         $create_session_request = new CreateSessionRequest();
         $create_session_request->setDatabase($this->database);
         $create_session_call = $this->stub->CreateSession($create_session_request);
@@ -176,7 +167,7 @@ class ChannelManagementNoConfigTest extends PHPUnit_Framework_TestCase
     // Test Execute Sql
     public function testExecuteSql()
     {
-        $this->createStub();
+        $this->createGrpcStub();
         $create_session_request = new CreateSessionRequest();
         $create_session_request->setDatabase($this->database);
         $create_session_call = $this->stub->CreateSession($create_session_request);
@@ -218,7 +209,7 @@ class ChannelManagementNoConfigTest extends PHPUnit_Framework_TestCase
     // Test Execute Streaming Sql
     public function testExecuteStreamingSql()
     {
-        $this->createStub();
+        $this->createGrpcStub();
         $create_session_request = new CreateSessionRequest();
         $create_session_request->setDatabase($this->database);
         $create_session_call = $this->stub->CreateSession($create_session_request);
@@ -248,7 +239,7 @@ class ChannelManagementNoConfigTest extends PHPUnit_Framework_TestCase
     // Test Concurrent Streams Watermark
     public function testConcurrentStreamsWatermark()
     {
-        $this->createStub(10, 2);
+        $this->createGrpcStub(10, 2);
         $sql_cmd = "select id from $this->table";
         $result = ['payload'];
         $exec_sql_calls = array();
@@ -340,7 +331,7 @@ class ChannelManagementNoConfigTest extends PHPUnit_Framework_TestCase
     // Test More Than 100 Concurrent Stream
     public function testHundredConcurrentStream()
     {
-        $this->createStub(10, 100);
+        $this->createGrpcStub(10, 100);
         $sql_cmd = "select id from $this->table";
         $result = ['payload'];
         $exec_sql_calls = array();
