@@ -3,7 +3,6 @@
     "description": "gRPC GCP library for channel management",
     "license": "Apache-2.0",
     "require": {
-
         "php": "^8.0",
         "google/protobuf": "^v3.25.3||^4.26.1",
         "grpc/grpc": "^v1.13.0",
