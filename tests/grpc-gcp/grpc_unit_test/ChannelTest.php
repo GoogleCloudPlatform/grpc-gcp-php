@@ -18,7 +18,6 @@
  */
 
 use PHPUnit\Framework\TestCase;
-use InvalidArgumentException;
 
 class ChannelTest extends TestCase
 {
