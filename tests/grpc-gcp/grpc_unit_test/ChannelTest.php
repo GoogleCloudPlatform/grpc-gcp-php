@@ -21,6 +21,11 @@ use PHPUnit\Framework\TestCase;
 
 class ChannelTest extends TestCase
 {
+    private Grpc\Gcp\GcpExtensionChannel $channel;
+    private Grpc\Gcp\GcpExtensionChannel $channel1;
+    private Grpc\Gcp\GcpExtensionChannel $channel2;
+    private Grpc\Gcp\GcpExtensionChannel $channel3;
+
     public function tearDown(): void
     {
         if (!empty($this->channel)) {
