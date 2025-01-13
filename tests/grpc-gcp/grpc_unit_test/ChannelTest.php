@@ -37,7 +37,6 @@ class ChannelTest extends TestCase
     {
         $this->channel = new Grpc\Gcp\GcpExtensionChannel('localhost:50000',
           ['credentials' => Grpc\ChannelCredentials::createInsecure()]);
-        print_r(get_class($this->channel));
         $this->assertSame('Grpc\Gcp\GcpExtensionChannel', get_class($this->channel));
     }
 
@@ -90,7 +89,6 @@ class ChannelTest extends TestCase
         // we act as if 'CONNECTING'(=1) was the last state
         // we saw, so the default state of 'IDLE' should be delivered instantly
         $state = $this->channel->watchConnectivityState(3, $deadline);
-        print_r($state);
         $this->assertTrue($state);
         unset($now);
         unset($deadline);
