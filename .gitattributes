@@ -3,4 +3,5 @@
 /.gitignore export-ignore
 /tests export-ignore
 /cloud-apis export-ignore
+/cloudprober/bins export-ignore
 phpunit.xml.dist export-ignore
